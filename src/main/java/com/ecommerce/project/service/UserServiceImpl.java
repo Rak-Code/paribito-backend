@@ -1,0 +1,87 @@
+package com.ecommerce.project.service;
+
+import com.ecommerce.project.dto.UserRegisterDTO;
+import com.ecommerce.project.dto.UserLoginDTO;
+import com.ecommerce.project.entity.User;
+import com.ecommerce.project.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class UserServiceImpl implements UserService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    public User register(UserRegisterDTO dto) {
+
+        if (userRepository.existsByEmail(dto.email())) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        User user = new User();
+        user.setFullName(dto.fullName());
+        user.setEmail(dto.email());
+        user.setPhone(dto.phone());
+        user.setPasswordHash(passwordEncoder.encode(dto.password()));
+
+        // Set role: if role is provided and equals "admin" (case-insensitive), set ADMIN, otherwise default to USER
+        if (dto.role() != null && !"".equals(dto.role().trim()) &&
+            "admin".equalsIgnoreCase(dto.role().trim())) {
+            user.setRole(User.Role.ADMIN);
+        }
+        // If role is not provided or invalid, keep default USER role
+
+        User saved = userRepository.save(user);
+        log.info("Registered new user with ID: {}", saved.getId());
+        
+        return saved;
+    }
+
+    @Override
+    public User login(UserLoginDTO dto) {
+
+        User user = userRepository.findByEmail(dto.email())
+                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(dto.password(), user.getPasswordHash())) {
+            throw new RuntimeException("Invalid email or password");
+        }
+
+        log.info("User {} logged in successfully", user.getId());
+        return user;
+    }
+
+    @Override
+    public User getUserById(String userId) {
+        log.info("Fetching user with ID: {}", userId);
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    @Override
+    public User addAddress(String userId, User.Address address) {
+
+        User user = getUserById(userId);
+
+        user.getAddresses().add(address);
+
+        User updated = userRepository.save(user);
+        log.info("Added address for user {}", userId);
+        
+        return updated;
+    }
+
+    @Override
+    public void deleteAddress(String userId, String addressId) {
+        User user = getUserById(userId);
+        user.getAddresses().removeIf(addr -> addr.getAddressId().equals(addressId));
+        userRepository.save(user);
+        log.info("Deleted address {} for user {}", addressId, userId);
+    }
+}

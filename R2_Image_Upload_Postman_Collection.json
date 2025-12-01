@@ -1,0 +1,210 @@
+{
+  "info": {
+    "name": "R2 Image Upload API",
+    "description": "Cloudflare R2 Image Upload and Management API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Upload Single Image",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            },
+            {
+              "key": "folder",
+              "value": "products",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/images/upload",
+          "host": ["{{base_url}}"],
+          "path": ["api", "images", "upload"]
+        },
+        "description": "Upload a single image to R2 storage"
+      },
+      "response": []
+    },
+    {
+      "name": "Upload Multiple Images",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "files",
+              "type": "file",
+              "src": []
+            },
+            {
+              "key": "files",
+              "type": "file",
+              "src": []
+            },
+            {
+              "key": "folder",
+              "value": "products",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/images/upload-multiple",
+          "host": ["{{base_url}}"],
+          "path": ["api", "images", "upload-multiple"]
+        },
+        "description": "Upload multiple images to R2 storage"
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Single Image",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/images/delete?imageUrl=https://your-bucket.r2.dev/products/image.jpg",
+          "host": ["{{base_url}}"],
+          "path": ["api", "images", "delete"],
+          "query": [
+            {
+              "key": "imageUrl",
+              "value": "https://your-bucket.r2.dev/products/image.jpg"
+            }
+          ]
+        },
+        "description": "Delete a single image from R2 storage"
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Multiple Images",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  \"https://your-bucket.r2.dev/products/image1.jpg\",\n  \"https://your-bucket.r2.dev/products/image2.jpg\"\n]"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/images/delete-multiple",
+          "host": ["{{base_url}}"],
+          "path": ["api", "images", "delete-multiple"]
+        },
+        "description": "Delete multiple images from R2 storage"
+      },
+      "response": []
+    },
+    {
+      "name": "Complete Flow - Upload then Create Product",
+      "item": [
+        {
+          "name": "Step 1: Upload Product Images",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.imageUrls) {",
+                  "    pm.environment.set(\"product_image_urls\", JSON.stringify(jsonData.imageUrls));",
+                  "    console.log(\"Image URLs saved:\", jsonData.imageUrls);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "folder",
+                  "value": "products",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/images/upload-multiple",
+              "host": ["{{base_url}}"],
+              "path": ["api", "images", "upload-multiple"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Step 2: Create Product with Image URLs",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "var imageUrls = pm.environment.get(\"product_image_urls\");",
+                  "if (imageUrls) {",
+                  "    pm.variables.set(\"imageUrls\", imageUrls);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Product with R2 Images\",\n  \"description\": \"Product with images from Cloudflare R2\",\n  \"price\": 99.99,\n  \"stockQuantity\": 10,\n  \"categoryId\": \"{{category_id}}\",\n  \"imageUrls\": {{imageUrls}},\n  \"size\": \"M\",\n  \"color\": \"Blue\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}
