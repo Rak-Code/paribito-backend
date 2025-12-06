@@ -20,6 +20,9 @@ public class GroqChatService {
     private String apiKey;
 
     private static final String GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+    private static final String DEFAULT_MODEL = "llama-3.3-70b-versatile";
+    private static final int MAX_TOKENS = 8000; // Increased token limit for more context
+    
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -27,10 +30,11 @@ public class GroqChatService {
         try {
             // Build request body
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", request.getModel());
+            requestBody.put("model", DEFAULT_MODEL);
             requestBody.put("messages", List.of(
                 Map.of("role", "user", "content", request.getMessage())
             ));
+            requestBody.put("max_tokens", MAX_TOKENS);
 
             // Set headers
             HttpHeaders headers = new HttpHeaders();
