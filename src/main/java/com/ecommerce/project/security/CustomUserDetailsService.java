@@ -12,6 +12,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
+
+
     /**
      * Loads user by email (username parameter treated as email).
      */
