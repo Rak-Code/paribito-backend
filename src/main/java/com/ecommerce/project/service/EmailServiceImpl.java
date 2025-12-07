@@ -188,6 +188,21 @@ public class EmailServiceImpl implements EmailService {
         }
         
         content.append("=====================================\n\n");
+        
+        // Add user's delivery address if available
+        if (user.getAddresses() != null && !user.getAddresses().isEmpty()) {
+            User.Address deliveryAddress = user.getAddresses().stream()
+                    .filter(User.Address::isDefault)
+                    .findFirst()
+                    .orElse(user.getAddresses().get(0));
+            
+            content.append("Delivery Address:\n");
+            content.append("-------------------------------------\n");
+            content.append(deliveryAddress.getAddressLine()).append("\n");
+            content.append(deliveryAddress.getCity()).append(", ").append(deliveryAddress.getState()).append("\n");
+            content.append(deliveryAddress.getPostalCode()).append(", ").append(deliveryAddress.getCountry()).append("\n\n");
+        }
+        
         content.append("Complete your purchase now before it's gone!\n\n");
         content.append("Your cart is waiting for you. Click below to checkout:\n");
         content.append("👉 Visit our store and complete your order today!\n\n");
@@ -220,6 +235,20 @@ public class EmailServiceImpl implements EmailService {
         }
         
         content.append("=====================================\n\n");
+        
+        // Add user's delivery address if available
+        if (user.getAddresses() != null && !user.getAddresses().isEmpty()) {
+            User.Address deliveryAddress = user.getAddresses().stream()
+                    .filter(User.Address::isDefault)
+                    .findFirst()
+                    .orElse(user.getAddresses().get(0));
+            
+            content.append("Delivery Address:\n");
+            content.append("-------------------------------------\n");
+            content.append(deliveryAddress.getAddressLine()).append("\n");
+            content.append(deliveryAddress.getCity()).append(", ").append(deliveryAddress.getState()).append("\n");
+            content.append(deliveryAddress.getPostalCode()).append(", ").append(deliveryAddress.getCountry()).append("\n\n");
+        }
         
         if (product.getStockQuantity() > 0) {
             content.append("Why wait? Turn your wish into reality today!\n\n");
