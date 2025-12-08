@@ -8,6 +8,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -94,10 +98,32 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductResponseDTO>> list(@RequestParam(required = false) String category,
-                                                        @RequestParam(required = false) String q) {
-        if (q != null && !q.isBlank()) return ResponseEntity.ok(productService.searchProducts(q));
-        if (category != null && !category.isBlank()) return ResponseEntity.ok(productService.getProductsByCategory(category));
+    @Operation(summary = "Get all products with pagination", description = "Retrieve products with optional pagination, filtering by category or search query")
+    public ResponseEntity<?> list(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false, defaultValue = "id") String sortBy,
+            @RequestParam(required = false, defaultValue = "ASC") String sortDirection) {
+        
+        // Handle search and category filtering (non-paginated)
+        if (q != null && !q.isBlank()) {
+            return ResponseEntity.ok(productService.searchProducts(q));
+        }
+        if (category != null && !category.isBlank()) {
+            return ResponseEntity.ok(productService.getProductsByCategory(category));
+        }
+        
+        // Handle pagination if page and size are provided
+        if (page != null && size != null) {
+            Sort.Direction direction = sortDirection.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+            Page<ProductResponseDTO> productPage = productService.getAllProducts(pageable);
+            return ResponseEntity.ok(productPage);
+        }
+        
+        // Default: return all products without pagination
         return ResponseEntity.ok(productService.getAllProducts());
     }
 }

@@ -6,6 +6,11 @@ import com.ecommerce.project.entity.Product;
 import com.ecommerce.project.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,7 +26,17 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ImageStorageService imageStorageService;
 
+    /**
+     * Create product -> evict list caches so subsequent reads fetch fresh data.
+     */
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "productsAll", allEntries = true),
+            @CacheEvict(value = "productsPage", allEntries = true),
+            @CacheEvict(value = "productsByCategory", allEntries = true),
+            @CacheEvict(value = "productsBySearch", allEntries = true),
+            @CacheEvict(value = "product", allEntries = true)
+    })
     public ProductResponseDTO createProduct(ProductRequestDTO dto) {
 
         Product product = new Product();
@@ -40,7 +55,17 @@ public class ProductServiceImpl implements ProductService {
         return toDTO(saved);
     }
 
+    /**
+     * Create product with images -> evict list caches.
+     */
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "productsAll", allEntries = true),
+            @CacheEvict(value = "productsPage", allEntries = true),
+            @CacheEvict(value = "productsByCategory", allEntries = true),
+            @CacheEvict(value = "productsBySearch", allEntries = true),
+            @CacheEvict(value = "product", allEntries = true)
+    })
     public ProductResponseDTO createProductWithImages(ProductRequestDTO dto, MultipartFile[] images) {
         List<String> imageUrls = new ArrayList<>();
         
@@ -73,7 +98,17 @@ public class ProductServiceImpl implements ProductService {
         return toDTO(saved);
     }
 
+    /**
+     * Update product -> evict the specific product cache entry + clear list caches.
+     */
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#id"),
+            @CacheEvict(value = "productsAll", allEntries = true),
+            @CacheEvict(value = "productsPage", allEntries = true),
+            @CacheEvict(value = "productsByCategory", allEntries = true),
+            @CacheEvict(value = "productsBySearch", allEntries = true)
+    })
     public ProductResponseDTO updateProduct(String id, ProductRequestDTO dto) {
 
         Product product = productRepository.findById(id)
@@ -94,7 +129,17 @@ public class ProductServiceImpl implements ProductService {
         return toDTO(updated);
     }
 
+    /**
+     * Update product with images -> evict specific product + clear list caches.
+     */
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#id"),
+            @CacheEvict(value = "productsAll", allEntries = true),
+            @CacheEvict(value = "productsPage", allEntries = true),
+            @CacheEvict(value = "productsByCategory", allEntries = true),
+            @CacheEvict(value = "productsBySearch", allEntries = true)
+    })
     public ProductResponseDTO updateProductWithImages(String id, ProductRequestDTO dto, MultipartFile[] images, boolean keepExistingImages) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -142,7 +187,17 @@ public class ProductServiceImpl implements ProductService {
         return toDTO(updated);
     }
 
+    /**
+     * Delete -> evict the specific product + clear list caches.
+     */
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#id"),
+            @CacheEvict(value = "productsAll", allEntries = true),
+            @CacheEvict(value = "productsPage", allEntries = true),
+            @CacheEvict(value = "productsByCategory", allEntries = true),
+            @CacheEvict(value = "productsBySearch", allEntries = true)
+    })
     public void deleteProduct(String id) {
         // Get product to delete its images
         Product product = productRepository.findById(id)
@@ -162,21 +217,33 @@ public class ProductServiceImpl implements ProductService {
         log.info("Deleted product {}", id);
     }
 
+    /**
+     * Cache products by category.
+     */
     @Override
+    @Cacheable(cacheNames = "productsByCategory", key = "#categoryId")
     public List<ProductResponseDTO> getProductsByCategory(String categoryId) {
         log.info("Fetching products for category: {}", categoryId);
         return productRepository.findByCategoryId(categoryId)
                 .stream().map(this::toDTO).collect(java.util.stream.Collectors.toList());
     }
 
+    /**
+     * Cache search results by keyword.
+     */
     @Override
+    @Cacheable(cacheNames = "productsBySearch", key = "#keyword")
     public List<ProductResponseDTO> searchProducts(String keyword) {
         log.info("Searching products with keyword: {}", keyword);
         return productRepository.findByNameContainingIgnoreCase(keyword)
                 .stream().map(this::toDTO).collect(java.util.stream.Collectors.toList());
     }
 
+    /**
+     * Cache single product by id.
+     */
     @Override
+    @Cacheable(cacheNames = "product", key = "#id")
     public ProductResponseDTO getProduct(String id) {
         log.info("Fetching product with ID: {}", id);
         return productRepository.findById(id)
@@ -184,13 +251,28 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new RuntimeException("Product not found"));
     }
 
+    /**
+     * Cache full product list (no paging).
+     */
     @Override
+    @Cacheable(cacheNames = "productsAll")
     public List<ProductResponseDTO> getAllProducts() {
         log.info("Fetching all products");
         return productRepository.findAll()
                 .stream()
                 .map(this::toDTO)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Cache paged product results. Key composed from pageNumber, pageSize and sort.
+     */
+    @Override
+    @Cacheable(cacheNames = "productsPage", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + (#pageable.sort != null ? #pageable.sort.toString() : '')")
+    public Page<ProductResponseDTO> getAllProducts(Pageable pageable) {
+        log.info("Fetching products with pagination - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        Page<Product> productPage = productRepository.findAll(pageable);
+        return productPage.map(this::toDTO);
     }
 
     private ProductResponseDTO toDTO(Product p) {

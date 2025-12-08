@@ -2,6 +2,7 @@ package com.ecommerce.project.service;
 
 import com.ecommerce.project.dto.UserRegisterDTO;
 import com.ecommerce.project.dto.UserLoginDTO;
+import com.ecommerce.project.dto.UserUpdateDTO;
 import com.ecommerce.project.entity.User;
 import com.ecommerce.project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -65,6 +66,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public java.util.List<User> getAllUsers() {
+        log.info("Fetching all users");
+        return userRepository.findAll();
+    }
+
+    @Override
+    public User getUserWithAddresses(String userId) {
+        log.info("Fetching user with addresses for ID: {}", userId);
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    @Override
     public User addAddress(String userId, User.Address address) {
 
         User user = getUserById(userId);
@@ -83,5 +97,20 @@ public class UserServiceImpl implements UserService {
         user.getAddresses().removeIf(addr -> addr.getAddressId().equals(addressId));
         userRepository.save(user);
         log.info("Deleted address {} for user {}", addressId, userId);
+    }
+
+    @Override
+    public User updateUser(String userId, UserUpdateDTO dto) {
+        User user = getUserById(userId);
+
+        // Update phone if provided
+        if (dto.phone() != null && !dto.phone().trim().isEmpty()) {
+            user.setPhone(dto.phone());
+        }
+
+        User updated = userRepository.save(user);
+        log.info("Updated user with ID: {}", userId);
+        
+        return updated;
     }
 }

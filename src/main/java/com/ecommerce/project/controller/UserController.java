@@ -1,5 +1,6 @@
 package com.ecommerce.project.controller;
 
+import com.ecommerce.project.dto.UserUpdateDTO;
 import com.ecommerce.project.entity.User;
 import com.ecommerce.project.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -13,9 +14,19 @@ public class UserController {
 
     private final UserService userService;
 
+    @GetMapping
+    public ResponseEntity<java.util.List<User>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable String id) {
         return ResponseEntity.ok(userService.getUserById(id));
+    }
+
+    @GetMapping("/{id}/addresses")
+    public ResponseEntity<User> getUserWithAddresses(@PathVariable String id) {
+        return ResponseEntity.ok(userService.getUserWithAddresses(id));
     }
 
     @PostMapping("/{id}/addresses")
@@ -28,5 +39,11 @@ public class UserController {
     public ResponseEntity<Void> deleteAddress(@PathVariable String id, @PathVariable String addressId) {
         userService.deleteAddress(id, addressId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody UserUpdateDTO dto) {
+        User user = userService.updateUser(id, dto);
+        return ResponseEntity.ok(user);
     }
 }

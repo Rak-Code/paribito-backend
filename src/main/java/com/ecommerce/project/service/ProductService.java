@@ -2,6 +2,8 @@ package com.ecommerce.project.service;
 
 import com.ecommerce.project.dto.ProductRequestDTO;
 import com.ecommerce.project.dto.ProductResponseDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -25,4 +27,6 @@ public interface ProductService {
     ProductResponseDTO getProduct(String id);
 
     List<ProductResponseDTO> getAllProducts();
+
+    Page<ProductResponseDTO> getAllProducts(Pageable pageable);
 }
