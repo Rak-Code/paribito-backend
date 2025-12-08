@@ -1,0 +1,3 @@
+testrakesh50_db_user
+f4zU7M4LWxkVdDgX
+mongodb+srv://testrakesh50_db_user:f4zU7M4LWxkVdDgX@paribitoclusterdb.xnuf4s3.mongodb.net/?appName=ParibitoClusterDB
