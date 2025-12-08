@@ -21,23 +21,26 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Add specific allowed origins
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
-        configuration.setAllowedOrigins(origins);
+        // Parse specific origins from properties and add wildcard patterns
+        List<String> originPatterns = Arrays.asList(allowedOrigins.split(","));
         
-        // Allow all Vercel app domains (*.vercel.app)
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-                "https://*.vercel.app",
-                "http://localhost:*"
-        ));
+        // Add wildcard patterns for Vercel and Railway
+        List<String> allPatterns = new java.util.ArrayList<>(originPatterns);
+        allPatterns.add("https://*.vercel.app");
+        allPatterns.add("https://*.railway.app");
+        allPatterns.add("http://localhost:*");
         
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // Use allowedOriginPatterns only (supports both exact matches and wildcards)
+        configuration.setAllowedOriginPatterns(allPatterns);
+        
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
+        source.registerCorsConfiguration("/**", configuration);
         
         return source;
     }
