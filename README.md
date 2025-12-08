@@ -17,15 +17,38 @@ A comprehensive Spring Boot-based e-commerce backend application with MongoDB, J
 
 ## Features
 
-- User authentication and authorization with JWT
-- Product management with image uploads
-- Shopping cart and wishlist functionality
-- Order management and payment processing via Razorpay
-- Email notifications for orders and reminders
-- Automated cart and wishlist reminder emails
-- Cloud-based image storage with Cloudflare R2
-- RESTful API with comprehensive documentation
-- MongoDB for flexible data storage
+### Core Features
+- ✅ User authentication and authorization with JWT
+- ✅ Product management with image uploads
+- ✅ Shopping cart and wishlist functionality
+- ✅ Order management and payment processing via Razorpay
+- ✅ Email notifications for orders and reminders
+- ✅ Automated cart and wishlist reminder emails
+- ✅ Cloud-based image storage with Cloudflare R2
+- ✅ RESTful API with comprehensive documentation
+- ✅ MongoDB for flexible data storage
+
+### Performance & Optimization
+- ✅ Caffeine caching for improved performance
+- ✅ Async email processing
+- ✅ Connection pooling for MongoDB
+- ✅ AOP-based logging with performance monitoring
+- ✅ GZIP compression for API responses
+
+### Security
+- ✅ JWT-based authentication
+- ✅ Password strength validation
+- ✅ BCrypt password hashing
+- ✅ Role-based access control (RBAC)
+- ✅ CORS configuration
+- ✅ Custom exception handling
+
+### Developer Experience
+- ✅ Swagger/OpenAPI documentation
+- ✅ Docker support with multi-stage builds
+- ✅ Comprehensive error handling
+- ✅ Input validation with Jakarta Validation
+- ✅ Structured logging with Logback
 
 ## Prerequisites
 

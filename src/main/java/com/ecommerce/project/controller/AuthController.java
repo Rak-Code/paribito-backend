@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -41,7 +42,7 @@ public class AuthController {
         content = @Content)
     @ApiResponse(responseCode = "409", description = "User already exists",
         content = @Content)
-    public ResponseEntity<UserResponseDTO> register(@RequestBody @Parameter(schema = @Schema(implementation = UserRegisterDTO.class)) UserRegisterDTO dto) {
+    public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody @Parameter(schema = @Schema(implementation = UserRegisterDTO.class)) UserRegisterDTO dto) {
         User saved = userService.register(dto);
         UserResponseDTO response = new UserResponseDTO(
             saved.getId(),
@@ -66,7 +67,7 @@ public class AuthController {
         content = @Content)
     @ApiResponse(responseCode = "400", description = "Invalid input data",
         content = @Content)
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody @Parameter(schema = @Schema(implementation = UserLoginDTO.class)) UserLoginDTO dto) {
+    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody @Parameter(schema = @Schema(implementation = UserLoginDTO.class)) UserLoginDTO dto) {
         User user = userService.login(dto);
         // Generate token
         UserDetails userDetails = new org.springframework.security.core.userdetails.User(

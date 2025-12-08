@@ -3,6 +3,7 @@ package com.ecommerce.project.service;
 import com.ecommerce.project.dto.ProductRequestDTO;
 import com.ecommerce.project.dto.ProductResponseDTO;
 import com.ecommerce.project.entity.Product;
+import com.ecommerce.project.exception.ResourceNotFoundException;
 import com.ecommerce.project.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -112,7 +113,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponseDTO updateProduct(String id, ProductRequestDTO dto) {
 
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
         
         product.setName(dto.name());
         product.setDescription(dto.description());
@@ -142,7 +143,7 @@ public class ProductServiceImpl implements ProductService {
     })
     public ProductResponseDTO updateProductWithImages(String id, ProductRequestDTO dto, MultipartFile[] images, boolean keepExistingImages) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
 
         List<String> imageUrls = new ArrayList<>();
         
@@ -201,7 +202,7 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProduct(String id) {
         // Get product to delete its images
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
         
         // Delete images from R2 storage
         if (product.getImageUrls() != null && !product.getImageUrls().isEmpty()) {
@@ -225,7 +226,7 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductResponseDTO> getProductsByCategory(String categoryId) {
         log.info("Fetching products for category: {}", categoryId);
         return productRepository.findByCategoryId(categoryId)
-                .stream().map(this::toDTO).collect(java.util.stream.Collectors.toList());
+                .stream().map(this::toDTO).toList();
     }
 
     /**
@@ -236,7 +237,7 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductResponseDTO> searchProducts(String keyword) {
         log.info("Searching products with keyword: {}", keyword);
         return productRepository.findByNameContainingIgnoreCase(keyword)
-                .stream().map(this::toDTO).collect(java.util.stream.Collectors.toList());
+                .stream().map(this::toDTO).toList();
     }
 
     /**
@@ -248,7 +249,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Fetching product with ID: {}", id);
         return productRepository.findById(id)
                 .map(this::toDTO)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
     }
 
     /**
@@ -261,7 +262,7 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findAll()
                 .stream()
                 .map(this::toDTO)
-                .collect(java.util.stream.Collectors.toList());
+                .toList();
     }
 
     /**

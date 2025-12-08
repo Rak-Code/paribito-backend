@@ -4,7 +4,11 @@ import com.ecommerce.project.dto.UserRegisterDTO;
 import com.ecommerce.project.dto.UserLoginDTO;
 import com.ecommerce.project.dto.UserUpdateDTO;
 import com.ecommerce.project.entity.User;
+import com.ecommerce.project.exception.DuplicateResourceException;
+import com.ecommerce.project.exception.ResourceNotFoundException;
+import com.ecommerce.project.exception.UnauthorizedException;
 import com.ecommerce.project.repository.UserRepository;
+import com.ecommerce.project.util.PasswordValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,8 +26,11 @@ public class UserServiceImpl implements UserService {
     public User register(UserRegisterDTO dto) {
 
         if (userRepository.existsByEmail(dto.email())) {
-            throw new RuntimeException("Email already exists");
+            throw new DuplicateResourceException("Email already exists: " + dto.email());
         }
+
+        // Validate password strength
+        PasswordValidator.validate(dto.password());
 
         User user = new User();
         user.setFullName(dto.fullName());
@@ -48,10 +55,10 @@ public class UserServiceImpl implements UserService {
     public User login(UserLoginDTO dto) {
 
         User user = userRepository.findByEmail(dto.email())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
 
         if (!passwordEncoder.matches(dto.password(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new UnauthorizedException("Invalid email or password");
         }
 
         log.info("User {} logged in successfully", user.getId());
@@ -62,7 +69,7 @@ public class UserServiceImpl implements UserService {
     public User getUserById(String userId) {
         log.info("Fetching user with ID: {}", userId);
         return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
     }
 
     @Override
@@ -75,7 +82,7 @@ public class UserServiceImpl implements UserService {
     public User getUserWithAddresses(String userId) {
         log.info("Fetching user with addresses for ID: {}", userId);
         return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
     }
 
     @Override

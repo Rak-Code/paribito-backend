@@ -4,6 +4,9 @@ import com.ecommerce.project.dto.OrderRequestDTO;
 import com.ecommerce.project.dto.OrderResponseDTO;
 import com.ecommerce.project.entity.Order;
 import com.ecommerce.project.entity.User;
+import com.ecommerce.project.exception.BadRequestException;
+import com.ecommerce.project.exception.ResourceNotFoundException;
+import com.ecommerce.project.exception.UnauthorizedException;
 import com.ecommerce.project.repository.OrderRepository;
 import com.ecommerce.project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +38,7 @@ public class OrderServiceImpl implements OrderService {
         // Send emails asynchronously
         try {
             User user = userRepository.findById(dto.userId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "id", dto.userId()));
             
             // Send confirmation email to customer
             emailService.sendOrderConfirmationToCustomer(saved, user);
@@ -56,21 +59,21 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDTO getOrder(String orderId) {
         return orderRepository.findById(orderId)
                 .map(this::toDTO)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
     }
 
     @Override
     public List<OrderResponseDTO> getUserOrders(String userId) {
         return orderRepository.findByUserId(userId)
                 .stream().map(this::toDTO)
-                .collect(java.util.stream.Collectors.toList());
+                .toList();
     }
 
     @Override
     public OrderResponseDTO updateOrderStatus(String orderId, String status) {
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
 
         order.setStatus(Order.Status.valueOf(status.toLowerCase()));
 
@@ -81,14 +84,14 @@ public class OrderServiceImpl implements OrderService {
     public void cancelOrder(String orderId, String userId) {
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
 
         if (!order.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized: Order does not belong to user");
+            throw new UnauthorizedException("Order does not belong to user");
         }
 
         if (order.getStatus() != Order.Status.pending && order.getStatus() != Order.Status.processing) {
-            throw new RuntimeException("Order cannot be cancelled at this stage");
+            throw new BadRequestException("Order cannot be cancelled at this stage");
         }
 
         order.setStatus(Order.Status.cancelled);
@@ -98,7 +101,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderResponseDTO> getAllOrders() {
         return orderRepository.findAll()
-                .stream().map(this::toDTO).collect(java.util.stream.Collectors.toList());
+                .stream().map(this::toDTO).toList();
     }
 
     private OrderResponseDTO toDTO(Order o) {

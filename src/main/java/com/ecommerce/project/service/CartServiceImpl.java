@@ -1,6 +1,8 @@
 package com.ecommerce.project.service;
 
 import com.ecommerce.project.entity.CartItem;
+import com.ecommerce.project.exception.BadRequestException;
+import com.ecommerce.project.exception.ResourceNotFoundException;
 import com.ecommerce.project.repository.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,10 +48,10 @@ public class CartServiceImpl implements CartService {
     public CartItem updateCartQuantity(String cartItemId, int quantity) {
 
         CartItem cartItem = cartRepository.findById(cartItemId)
-                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item", "id", cartItemId));
 
         if (quantity <= 0) {
-            throw new RuntimeException("Quantity must be greater than 0");
+            throw new BadRequestException("Quantity must be greater than 0");
         }
 
         cartItem.setQuantity(quantity);
@@ -59,7 +61,11 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartItem updateQuantity(String userId, String productId, int quantity) {
         CartItem item = cartRepository.findByUserIdAndProductId(userId, productId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found for user: " + userId + " and product: " + productId));
+
+        if (quantity <= 0) {
+            throw new BadRequestException("Quantity must be greater than 0");
+        }
 
         item.setQuantity(quantity);
 
