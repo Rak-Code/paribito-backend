@@ -20,10 +20,16 @@ import org.springframework.context.annotation.Configuration;
                         email = "support@ecommerce.com"
                 )
         ),
-        servers = @Server(
-                url = "http://localhost:8080",
-                description = "Development server"
-        ),
+        servers = {
+                @Server(
+                        url = "https://paribito-backend-production.up.railway.app",
+                        description = "Production server (Railway)"
+                ),
+                @Server(
+                        url = "http://localhost:8080",
+                        description = "Development server"
+                )
+        },
         security = @SecurityRequirement(name = "bearerAuth")
 )
 @SecurityScheme(
