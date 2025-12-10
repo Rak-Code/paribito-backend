@@ -1,5 +1,20 @@
 package com.ecommerce.project.config;
 
+/*
+ * REDIS CONFIGURATION DISABLED
+ * 
+ * This configuration has been commented out to remove Redis dependency.
+ * The application will work without Redis caching.
+ * 
+ * To re-enable Redis:
+ * 1. Uncomment this entire file
+ * 2. Uncomment Redis dependencies in pom.xml
+ * 3. Uncomment Redis configuration in application.properties
+ * 4. Uncomment CacheConfig.java
+ * 5. Uncomment cache annotations in service classes
+ */
+
+/*
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.SocketOptions;
 import org.springframework.beans.factory.annotation.Value;
@@ -82,3 +97,4 @@ public class RedisConfig {
         return template;
     }
 }
+*/

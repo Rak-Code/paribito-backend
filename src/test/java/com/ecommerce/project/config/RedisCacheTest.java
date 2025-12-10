@@ -1,5 +1,13 @@
 package com.ecommerce.project.config;
 
+/*
+ * REDIS TEST DISABLED
+ * 
+ * This test has been commented out because Redis has been removed from the application.
+ * Uncomment this file if you re-enable Redis caching.
+ */
+
+/*
 import com.ecommerce.project.dto.ProductResponseDTO;
 import com.ecommerce.project.entity.Product;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,11 +22,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Test Redis serialization and deserialization
- * Note: This test requires a running Redis instance
- * Set spring.data.redis.host and spring.data.redis.port in test properties
- */
 @SpringBootTest
 @TestPropertySource(properties = {
     "spring.data.redis.host=localhost",
@@ -36,20 +39,16 @@ class RedisCacheTest {
 
     @Test
     void testRedisBeansAreConfigured() {
-        // This test will pass even if Redis is not running
-        // It just checks if beans are configured
         assertNotNull(redisObjectMapper, "Redis ObjectMapper should be configured");
     }
 
     @Test
     void testProductResponseDTOSerialization() throws Exception {
-        // Skip if Redis is not available
         if (redisTemplate == null) {
             System.out.println("Redis not available, skipping test");
             return;
         }
 
-        // Create test data
         ProductResponseDTO product = new ProductResponseDTO(
                 "test-id-123",
                 "Test Product",
@@ -62,37 +61,26 @@ class RedisCacheTest {
                 Arrays.asList("https://example.com/image1.jpg", "https://example.com/image2.jpg")
         );
 
-        // Test serialization and deserialization
         String key = "test:product:123";
         
         try {
-            // Store in Redis
             redisTemplate.opsForValue().set(key, product);
-            
-            // Retrieve from Redis
             Object retrieved = redisTemplate.opsForValue().get(key);
-            
             assertNotNull(retrieved, "Retrieved object should not be null");
-            
-            // Clean up
             redisTemplate.delete(key);
-            
             System.out.println("Redis serialization test passed!");
         } catch (Exception e) {
             System.err.println("Redis test failed: " + e.getMessage());
-            // Don't fail the test if Redis is not available
         }
     }
 
     @Test
     void testListSerialization() throws Exception {
-        // Skip if Redis is not available
         if (redisTemplate == null) {
             System.out.println("Redis not available, skipping test");
             return;
         }
 
-        // Create test data
         List<ProductResponseDTO> products = Arrays.asList(
                 new ProductResponseDTO(
                         "id-1",
@@ -121,21 +109,14 @@ class RedisCacheTest {
         String key = "test:products:list";
         
         try {
-            // Store in Redis
             redisTemplate.opsForValue().set(key, products);
-            
-            // Retrieve from Redis
             Object retrieved = redisTemplate.opsForValue().get(key);
-            
             assertNotNull(retrieved, "Retrieved list should not be null");
-            
-            // Clean up
             redisTemplate.delete(key);
-            
             System.out.println("Redis list serialization test passed!");
         } catch (Exception e) {
             System.err.println("Redis list test failed: " + e.getMessage());
-            // Don't fail the test if Redis is not available
         }
     }
 }
+*/
