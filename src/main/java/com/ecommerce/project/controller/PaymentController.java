@@ -8,6 +8,10 @@ import com.ecommerce.project.entity.Payment;
 import com.ecommerce.project.service.PaymentService;
 import com.ecommerce.project.service.RazorpayService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -38,8 +42,22 @@ public class PaymentController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public java.util.List<Payment> allPayments() {
-        return paymentService.getAllPayments();
+    public ResponseEntity<?> allPayments(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false, defaultValue = "paymentDate") String sortBy,
+            @RequestParam(required = false, defaultValue = "DESC") String sortDirection) {
+        
+        // Handle pagination if page and size are provided
+        if (page != null && size != null) {
+            Sort.Direction direction = sortDirection.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+            Page<Payment> paymentPage = paymentService.getAllPayments(pageable);
+            return ResponseEntity.ok(paymentPage);
+        }
+        
+        // Default: return all payments without pagination
+        return ResponseEntity.ok(paymentService.getAllPayments());
     }
 
     // Razorpay Integration Endpoints

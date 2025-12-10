@@ -11,6 +11,8 @@ import com.ecommerce.project.repository.UserRepository;
 import com.ecommerce.project.util.PasswordValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -76,6 +78,12 @@ public class UserServiceImpl implements UserService {
     public java.util.List<User> getAllUsers() {
         log.info("Fetching all users");
         return userRepository.findAll();
+    }
+
+    @Override
+    public Page<User> getAllUsers(Pageable pageable) {
+        log.info("Fetching all users with pagination");
+        return userRepository.findAll(pageable);
     }
 
     @Override

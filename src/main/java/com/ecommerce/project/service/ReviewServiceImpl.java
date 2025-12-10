@@ -5,7 +5,10 @@ import com.ecommerce.project.entity.Review;
 import com.ecommerce.project.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
@@ -45,6 +48,12 @@ public class ReviewServiceImpl implements ReviewService {
     public List<Review> getProductReviews(String productId) {
         log.info("Fetching reviews for product: {}", productId);
         return reviewRepository.findByProductId(productId);
+    }
+
+    @Override
+    public Page<Review> getProductReviews(String productId, Pageable pageable) {
+        log.info("Fetching reviews for product: {} with pagination", productId);
+        return reviewRepository.findByProductId(productId, pageable);
     }
 
     @Override

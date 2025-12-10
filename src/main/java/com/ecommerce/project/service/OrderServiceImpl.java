@@ -11,7 +11,10 @@ import com.ecommerce.project.repository.OrderRepository;
 import com.ecommerce.project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
@@ -70,6 +73,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public Page<OrderResponseDTO> getUserOrders(String userId, Pageable pageable) {
+        return orderRepository.findByUserId(userId, pageable)
+                .map(this::toDTO);
+    }
+
+    @Override
     public OrderResponseDTO updateOrderStatus(String orderId, String status) {
 
         Order order = orderRepository.findById(orderId)
@@ -102,6 +111,12 @@ public class OrderServiceImpl implements OrderService {
     public List<OrderResponseDTO> getAllOrders() {
         return orderRepository.findAll()
                 .stream().map(this::toDTO).toList();
+    }
+
+    @Override
+    public Page<OrderResponseDTO> getAllOrders(Pageable pageable) {
+        return orderRepository.findAll(pageable)
+                .map(this::toDTO);
     }
 
     private OrderResponseDTO toDTO(Order o) {

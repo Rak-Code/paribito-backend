@@ -1,5 +1,7 @@
 package com.ecommerce.project.config;
 
+// Commented out - springdoc-openapi dependency removed
+/*
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Contact;
@@ -40,3 +42,4 @@ import org.springframework.context.annotation.Configuration;
 )
 public class SwaggerConfig {
 }
+*/

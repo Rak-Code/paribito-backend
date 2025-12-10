@@ -1,10 +1,11 @@
 package com.ecommerce.project.config;
 
-import com.razorpay.RazorpayClient;
-import com.razorpay.RazorpayException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
+
+import java.util.Base64;
 
 @Configuration
 public class RazorpayConfig {
@@ -16,7 +17,14 @@ public class RazorpayConfig {
     private String keySecret;
 
     @Bean
-    public RazorpayClient razorpayClient() throws RazorpayException {
-        return new RazorpayClient(keyId, keySecret);
+    public RestClient razorpayRestClient() {
+        String auth = keyId + ":" + keySecret;
+        String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
+        
+        return RestClient.builder()
+                .baseUrl("https://api.razorpay.com/v1")
+                .defaultHeader("Authorization", "Basic " + encodedAuth)
+                .defaultHeader("Content-Type", "application/json")
+                .build();
     }
 }

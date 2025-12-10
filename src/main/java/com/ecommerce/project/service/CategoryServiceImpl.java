@@ -4,7 +4,10 @@ import com.ecommerce.project.entity.Category;
 import com.ecommerce.project.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
@@ -37,6 +40,12 @@ public class CategoryServiceImpl implements CategoryService {
     public List<Category> getAllCategories() {
         log.info("Fetching all categories");
         return categoryRepository.findAll();
+    }
+
+    @Override
+    public Page<Category> getAllCategories(Pageable pageable) {
+        log.info("Fetching all categories with pagination");
+        return categoryRepository.findAll(pageable);
     }
 
     @Override

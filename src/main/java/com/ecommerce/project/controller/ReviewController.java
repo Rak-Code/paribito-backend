@@ -4,6 +4,10 @@ import com.ecommerce.project.dto.ReviewRequestDTO;
 import com.ecommerce.project.entity.Review;
 import com.ecommerce.project.service.ReviewService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +26,22 @@ public class ReviewController {
     }
 
     @GetMapping("/product/{productId}")
-    public ResponseEntity<List<Review>> productReviews(@PathVariable String productId) {
+    public ResponseEntity<?> productReviews(
+            @PathVariable String productId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false, defaultValue = "reviewDate") String sortBy,
+            @RequestParam(required = false, defaultValue = "DESC") String sortDirection) {
+        
+        // Handle pagination if page and size are provided
+        if (page != null && size != null) {
+            Sort.Direction direction = sortDirection.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+            Page<Review> reviewPage = reviewService.getProductReviews(productId, pageable);
+            return ResponseEntity.ok(reviewPage);
+        }
+        
+        // Default: return all reviews without pagination
         return ResponseEntity.ok(reviewService.getProductReviews(productId));
     }
 

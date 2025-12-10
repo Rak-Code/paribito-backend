@@ -5,22 +5,23 @@ import com.ecommerce.project.dto.RazorpayOrderResponseDTO;
 import com.ecommerce.project.dto.RazorpayPaymentVerificationDTO;
 import com.ecommerce.project.entity.Payment;
 import com.ecommerce.project.repository.PaymentRepository;
-import com.razorpay.Order;
-import com.razorpay.RazorpayClient;
-import com.razorpay.RazorpayException;
-import com.razorpay.Utils;
 import lombok.RequiredArgsConstructor;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.HexFormat;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class RazorpayServiceImpl implements RazorpayService {
 
-    private final RazorpayClient razorpayClient;
+    private final RestClient razorpayRestClient;
     private final PaymentRepository paymentRepository;
 
     @Value("${razorpay.key.id}")
@@ -35,12 +36,17 @@ public class RazorpayServiceImpl implements RazorpayService {
     @Override
     public RazorpayOrderResponseDTO createRazorpayOrder(RazorpayOrderRequestDTO dto) {
         try {
-            JSONObject orderRequest = new JSONObject();
-            orderRequest.put("amount", (int) (dto.amount() * 100)); // Amount in paise
-            orderRequest.put("currency", currency);
-            orderRequest.put("receipt", dto.orderId());
+            Map<String, Object> orderRequest = Map.of(
+                    "amount", (int) (dto.amount() * 100), // Amount in paise
+                    "currency", currency,
+                    "receipt", dto.orderId()
+            );
 
-            Order order = razorpayClient.orders.create(orderRequest);
+            Map<String, Object> order = razorpayRestClient.post()
+                    .uri("/orders")
+                    .body(orderRequest)
+                    .retrieve()
+                    .body(Map.class);
 
             // Create payment record with pending status
             Payment payment = new Payment();
@@ -48,18 +54,18 @@ public class RazorpayServiceImpl implements RazorpayService {
             payment.setAmount(dto.amount());
             payment.setPaymentMethod(Payment.PaymentMethod.razorpay);
             payment.setPaymentStatus(Payment.PaymentStatus.pending);
-            payment.setRazorpayOrderId(order.get("id"));
+            payment.setRazorpayOrderId((String) order.get("id"));
             paymentRepository.save(payment);
 
             return new RazorpayOrderResponseDTO(
-                    order.get("id"),
+                    (String) order.get("id"),
                     dto.orderId(),
                     dto.amount(),
                     currency,
                     keyId
             );
 
-        } catch (RazorpayException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Failed to create Razorpay order: " + e.getMessage(), e);
         }
     }
@@ -67,15 +73,11 @@ public class RazorpayServiceImpl implements RazorpayService {
     @Override
     public Payment verifyPayment(RazorpayPaymentVerificationDTO dto) {
         try {
-            // Verify signature
-            JSONObject options = new JSONObject();
-            options.put("razorpay_order_id", dto.razorpayOrderId());
-            options.put("razorpay_payment_id", dto.razorpayPaymentId());
-            options.put("razorpay_signature", dto.razorpaySignature());
+            // Verify signature using HMAC SHA256
+            String payload = dto.razorpayOrderId() + "|" + dto.razorpayPaymentId();
+            String generatedSignature = generateSignature(payload, keySecret);
 
-            boolean isValidSignature = Utils.verifyPaymentSignature(options, keySecret);
-
-            if (!isValidSignature) {
+            if (!generatedSignature.equals(dto.razorpaySignature())) {
                 throw new RuntimeException("Invalid payment signature");
             }
 
@@ -91,8 +93,20 @@ public class RazorpayServiceImpl implements RazorpayService {
 
             return paymentRepository.save(payment);
 
-        } catch (RazorpayException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Payment verification failed: " + e.getMessage(), e);
+        }
+    }
+
+    private String generateSignature(String payload, String secret) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secretKeySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            mac.init(secretKeySpec);
+            byte[] hash = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate signature", e);
         }
     }
 
@@ -106,20 +120,25 @@ public class RazorpayServiceImpl implements RazorpayService {
                 throw new RuntimeException("Razorpay payment ID not found");
             }
 
-            JSONObject refundRequest = new JSONObject();
-            refundRequest.put("amount", (int) (amount * 100)); // Amount in paise
-            refundRequest.put("speed", "normal");
+            Map<String, Object> refundRequest = Map.of(
+                    "amount", (int) (amount * 100), // Amount in paise
+                    "speed", "normal"
+            );
 
-            // Create refund using Razorpay client
-            com.razorpay.Refund refund = razorpayClient.payments.refund(payment.getRazorpayPaymentId(), refundRequest);
+            // Create refund using RestClient
+            Map<String, Object> refund = razorpayRestClient.post()
+                    .uri("/payments/{paymentId}/refund", payment.getRazorpayPaymentId())
+                    .body(refundRequest)
+                    .retrieve()
+                    .body(Map.class);
 
             // Update payment status
             payment.setPaymentStatus(Payment.PaymentStatus.refunded);
             paymentRepository.save(payment);
 
-            return refund.get("id");
+            return (String) refund.get("id");
 
-        } catch (RazorpayException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Refund failed: " + e.getMessage(), e);
         }
     }

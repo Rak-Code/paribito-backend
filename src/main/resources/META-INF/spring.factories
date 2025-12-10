@@ -1,2 +1,3 @@
-org.springframework.context.ApplicationContextInitializer=\
-com.ecommerce.project.config.DotenvConfig
+# Commented out - using Railway environment variables instead of .env file
+# org.springframework.context.ApplicationContextInitializer=\
+# com.ecommerce.project.config.DotenvConfig

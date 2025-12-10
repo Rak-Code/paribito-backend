@@ -4,8 +4,11 @@ import com.ecommerce.project.dto.PaymentRequestDTO;
 import com.ecommerce.project.entity.Payment;
 import com.ecommerce.project.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -56,5 +59,10 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public List<Payment> getAllPayments() {
         return paymentRepository.findAll();
+    }
+
+    @Override
+    public Page<Payment> getAllPayments(Pageable pageable) {
+        return paymentRepository.findAll(pageable);
     }
 }

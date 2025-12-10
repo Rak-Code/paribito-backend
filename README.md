@@ -7,6 +7,7 @@ A comprehensive Spring Boot-based e-commerce backend application with MongoDB, J
 - **Java 21** (Compiler: Java 23)
 - **Spring Boot 3.5.8**
 - **MongoDB** - NoSQL Database
+- **Redis Cloud** - Distributed caching
 - **Spring Security** - Authentication & Authorization
 - **JWT** - Token-based authentication
 - **Razorpay** - Payment Gateway Integration
@@ -29,11 +30,12 @@ A comprehensive Spring Boot-based e-commerce backend application with MongoDB, J
 - ✅ MongoDB for flexible data storage
 
 ### Performance & Optimization
-- ✅ Caffeine caching for improved performance
+- ✅ Redis Cloud distributed caching for improved performance
 - ✅ Async email processing
 - ✅ Connection pooling for MongoDB
 - ✅ AOP-based logging with performance monitoring
 - ✅ GZIP compression for API responses
+- ✅ Automatic cache invalidation on data changes
 
 ### Security
 - ✅ JWT-based authentication
@@ -109,6 +111,12 @@ R2_SECRET_ACCESS_KEY=your_r2_secret_key
 R2_BUCKET_NAME=ecommerce-images
 R2_PUBLIC_URL=https://your-bucket.r2.dev
 
+# Redis Cloud Configuration
+REDIS_HOST=your-redis-cloud-host.cloud.redislabs.com
+REDIS_PORT=12345
+REDIS_PASSWORD=your_redis_password
+REDIS_SSL_ENABLED=true
+
 # Groq API (Optional - for AI features)
 GROQ_API_KEY=your_groq_api_key
 ```
@@ -117,6 +125,7 @@ GROQ_API_KEY=your_groq_api_key
 - For Gmail, you need to generate an [App Password](https://support.google.com/accounts/answer/185833)
 - For Razorpay, sign up at [Razorpay Dashboard](https://dashboard.razorpay.com/)
 - For Cloudflare R2, create a bucket at [Cloudflare Dashboard](https://dash.cloudflare.com/)
+- For Redis Cloud, sign up at [Redis Cloud](https://app.redislabs.com/) - See [REDIS_SETUP.md](REDIS_SETUP.md) for detailed instructions
 
 ### 4. Install Dependencies
 

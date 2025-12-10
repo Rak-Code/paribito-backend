@@ -1,5 +1,7 @@
 package com.ecommerce.project.config;
 
+// Commented out - using Railway environment variables instead of .env file
+/*
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -35,3 +37,4 @@ public class DotenvConfig implements ApplicationContextInitializer<ConfigurableA
         }
     }
 }
+*/
