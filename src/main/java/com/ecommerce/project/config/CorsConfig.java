@@ -30,6 +30,10 @@ public class CorsConfig {
         allPatterns.add("https://*.railway.app");
         allPatterns.add("http://localhost:*");
         
+        // Hard-coded specific origins for guaranteed access
+        allPatterns.add("https://paribito20.vercel.app");
+        allPatterns.add("https://paribito-backend-production.up.railway.app");
+        
         // Use allowedOriginPatterns only (supports both exact matches and wildcards)
         configuration.setAllowedOriginPatterns(allPatterns);
         
