@@ -135,17 +135,21 @@
 			<artifactId>spring-boot-starter-aop</artifactId>
 		</dependency>
 
-		<!-- Spring Cache -->
+		<!-- Spring Cache - DISABLED (Redis removed) -->
+		<!--
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache</artifactId>
 		</dependency>
+		-->
 
-		<!-- Spring Data Redis -->
+		<!-- Spring Data Redis - DISABLED -->
+		<!--
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
+		-->
 
 		<!-- Lettuce (Redis client) - included with spring-boot-starter-data-redis -->
 		<!-- Jackson for Redis JSON serialization -->

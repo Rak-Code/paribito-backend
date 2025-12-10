@@ -1,5 +1,19 @@
 package com.ecommerce.project.config;
 
+/*
+ * REDIS CACHING DISABLED
+ * 
+ * This configuration has been commented out to remove Redis dependency.
+ * The application will work without caching - all data will be fetched from MongoDB.
+ * 
+ * To re-enable Redis caching:
+ * 1. Uncomment this entire file
+ * 2. Uncomment Redis dependencies in pom.xml
+ * 3. Uncomment Redis configuration in application.properties
+ * 4. Uncomment cache annotations in ProductServiceImpl.java
+ */
+
+/*
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -95,3 +109,4 @@ public class CacheConfig {
                 .build();
     }
 }
+*/
