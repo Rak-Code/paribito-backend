@@ -4,8 +4,6 @@ import com.ecommerce.project.dto.ProductRequestDTO;
 import com.ecommerce.project.dto.ProductResponseDTO;
 import com.ecommerce.project.entity.Product;
 import com.ecommerce.project.service.ProductService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,14 +22,12 @@ import java.util.List;
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Products", description = "Product management endpoints")
 public class ProductController {
 
     private final ProductService productService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create product with images", description = "Create a new product and upload images automatically")
     public ResponseEntity<ProductResponseDTO> create(
             @RequestParam("name") String name,
             @RequestParam("description") String description,
@@ -58,7 +54,6 @@ public class ProductController {
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Update product with images", description = "Update product and optionally upload new images")
     public ResponseEntity<ProductResponseDTO> update(
             @PathVariable String id,
             @RequestParam("name") String name,
@@ -98,7 +93,6 @@ public class ProductController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all products with pagination", description = "Retrieve products with optional pagination, filtering by category or search query")
     public ResponseEntity<?> list(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String q,

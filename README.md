@@ -13,7 +13,6 @@ A comprehensive Spring Boot-based e-commerce backend application with MongoDB, J
 - **Razorpay** - Payment Gateway Integration
 - **Spring Mail** - Email notifications
 - **Cloudflare R2** - Cloud storage (S3-compatible)
-- **Swagger/OpenAPI** - API Documentation
 - **Lombok** - Reduce boilerplate code
 
 ## Features
@@ -46,7 +45,6 @@ A comprehensive Spring Boot-based e-commerce backend application with MongoDB, J
 - ✅ Custom exception handling
 
 ### Developer Experience
-- ✅ Swagger/OpenAPI documentation
 - ✅ Docker support with multi-stage builds
 - ✅ Comprehensive error handling
 - ✅ Input validation with Jakarta Validation
@@ -155,15 +153,10 @@ The application will start on `http://localhost:8080`
 
 ## API Documentation
 
-Once the application is running, access the interactive API documentation:
-
-**Swagger UI:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
-
-This provides a complete interactive interface to:
-- View all available endpoints
-- Test API requests directly from the browser
-- See request/response schemas
-- Understand authentication requirements
+The application provides RESTful API endpoints. You can test them using:
+- Postman collections (included in the project)
+- cURL commands
+- Any HTTP client
 
 ## Project Structure
 
@@ -212,7 +205,7 @@ project/
 - `POST /api/payments/razorpay/create` - Create Razorpay payment
 - `POST /api/payments/razorpay/verify` - Verify payment
 
-For complete endpoint details, visit the Swagger documentation.
+For complete endpoint details, check the API_ENDPOINTS_GUIDE.md file.
 
 ## Configuration
 
@@ -316,7 +309,7 @@ This project is licensed under the terms specified in the `pom.xml` file.
 
 For issues and questions:
 - Check the documentation files in the project root
-- Review Swagger API documentation
+- Review API_ENDPOINTS_GUIDE.md for endpoint details
 - Check application logs for detailed error messages
 
 ## Quick Start Checklist
@@ -326,8 +319,7 @@ For issues and questions:
 - [ ] `.env` file configured with all credentials
 - [ ] Dependencies installed (`mvnw clean install`)
 - [ ] Application running (`mvnw spring-boot:run`)
-- [ ] Swagger UI accessible at http://localhost:8080/swagger-ui/index.html
-- [ ] Test API endpoints via Swagger or Postman
+- [ ] Test API endpoints via Postman or cURL
 
 ---
 
