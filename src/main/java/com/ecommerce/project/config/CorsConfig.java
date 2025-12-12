@@ -24,10 +24,11 @@ public class CorsConfig {
         // Parse specific origins from properties and add wildcard patterns
         List<String> originPatterns = Arrays.asList(allowedOrigins.split(","));
         
-        // Add wildcard patterns for Vercel and Railway
+        // Add wildcard patterns for Vercel, Railway, and Lovable
         List<String> allPatterns = new java.util.ArrayList<>(originPatterns);
         allPatterns.add("https://*.vercel.app");
         allPatterns.add("https://*.railway.app");
+        allPatterns.add("https://*.lovable.app");
         allPatterns.add("http://localhost:*");
         
         // Hard-coded specific origins for guaranteed access
