@@ -38,7 +38,7 @@ public class RazorpayServiceImpl implements RazorpayService {
     public RazorpayOrderResponseDTO createRazorpayOrder(RazorpayOrderRequestDTO dto) {
         try {
             // Validate required fields
-            if (dto.amount() == null || dto.amount() <= 0) {
+            if (dto.amount() <= 0) {
                 throw new IllegalArgumentException("Amount must be greater than 0");
             }
             if (dto.orderId() == null || dto.orderId().isEmpty()) {
