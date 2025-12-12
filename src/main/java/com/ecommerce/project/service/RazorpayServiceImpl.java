@@ -14,6 +14,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.Map;
 
@@ -36,11 +37,21 @@ public class RazorpayServiceImpl implements RazorpayService {
     @Override
     public RazorpayOrderResponseDTO createRazorpayOrder(RazorpayOrderRequestDTO dto) {
         try {
-            Map<String, Object> orderRequest = Map.of(
-                    "amount", (int) (dto.amount() * 100), // Amount in paise
-                    "currency", currency,
-                    "receipt", dto.orderId()
-            );
+            // Validate required fields
+            if (dto.amount() == null || dto.amount() <= 0) {
+                throw new IllegalArgumentException("Amount must be greater than 0");
+            }
+            if (dto.orderId() == null || dto.orderId().isEmpty()) {
+                throw new IllegalArgumentException("Order ID is required");
+            }
+            if (currency == null || currency.isEmpty()) {
+                throw new IllegalArgumentException("Currency is not configured");
+            }
+
+            Map<String, Object> orderRequest = new HashMap<>();
+            orderRequest.put("amount", (int) (dto.amount() * 100)); // Amount in paise
+            orderRequest.put("currency", currency);
+            orderRequest.put("receipt", dto.orderId());
 
             Map<String, Object> order = razorpayRestClient.post()
                     .uri("/orders")
@@ -120,10 +131,9 @@ public class RazorpayServiceImpl implements RazorpayService {
                 throw new RuntimeException("Razorpay payment ID not found");
             }
 
-            Map<String, Object> refundRequest = Map.of(
-                    "amount", (int) (amount * 100), // Amount in paise
-                    "speed", "normal"
-            );
+            Map<String, Object> refundRequest = new HashMap<>();
+            refundRequest.put("amount", (int) (amount * 100)); // Amount in paise
+            refundRequest.put("speed", "normal");
 
             // Create refund using RestClient
             Map<String, Object> refund = razorpayRestClient.post()
