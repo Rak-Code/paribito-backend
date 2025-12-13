@@ -1,13 +1,17 @@
 package com.ecommerce.project.service;
 
+import com.ecommerce.project.entity.Invoice;
 import com.ecommerce.project.entity.Order;
 import com.ecommerce.project.entity.Product;
 import com.ecommerce.project.entity.User;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -264,6 +268,93 @@ public class EmailServiceImpl implements EmailService {
         content.append("Adita Enterprise India\n\n");
         content.append("---\n");
         content.append("P.S. You can manage your wishlist anytime by visiting our store.");
+
+        return content.toString();
+    }
+
+    @Override
+    @Async
+    public void sendInvoiceToCustomer(Invoice invoice, User user, byte[] pdfData) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setFrom(fromEmail);
+            helper.setTo(user.getEmail());
+            helper.setSubject("Invoice for Order #" + invoice.getOrderId());
+            helper.setText(buildInvoiceEmailContent(invoice, user));
+
+            // Attach PDF
+            helper.addAttachment(invoice.getInvoiceNumber() + ".pdf", new ByteArrayResource(pdfData));
+
+            mailSender.send(message);
+            log.info("Invoice email sent to customer: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send invoice email to customer: {}", user.getEmail(), e);
+        }
+    }
+
+    @Override
+    @Async
+    public void sendInvoiceToAdmin(Invoice invoice, User user, byte[] pdfData) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setFrom(fromEmail);
+            helper.setTo(adminEmail);
+            helper.setSubject("Invoice Generated - Order #" + invoice.getOrderId());
+            helper.setText(buildAdminInvoiceEmailContent(invoice, user));
+
+            // Attach PDF
+            helper.addAttachment(invoice.getInvoiceNumber() + ".pdf", new ByteArrayResource(pdfData));
+
+            mailSender.send(message);
+            log.info("Invoice email sent to admin: {}", adminEmail);
+        } catch (Exception e) {
+            log.error("Failed to send invoice email to admin", e);
+        }
+    }
+
+    private String buildInvoiceEmailContent(Invoice invoice, User user) {
+        StringBuilder content = new StringBuilder();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+        content.append("Dear ").append(user.getFullName()).append(",\n\n");
+        content.append("Thank you for your order! Please find your invoice attached.\n\n");
+        content.append("Invoice Details:\n");
+        content.append("=====================================\n");
+        content.append("Invoice Number: ").append(invoice.getInvoiceNumber()).append("\n");
+        content.append("Invoice Date: ").append(invoice.getInvoiceDate().format(formatter)).append("\n");
+        content.append("Order ID: ").append(invoice.getOrderId()).append("\n");
+        content.append("Total Amount: ₹").append(String.format("%.2f", invoice.getTotalAmount())).append("\n\n");
+        content.append("The invoice PDF is attached to this email.\n\n");
+        content.append("If you have any questions, please don't hesitate to contact us.\n\n");
+        content.append("Best Regards,\n");
+        content.append("Adita Enterprise India");
+
+        return content.toString();
+    }
+
+    private String buildAdminInvoiceEmailContent(Invoice invoice, User user) {
+        StringBuilder content = new StringBuilder();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+
+        content.append("Invoice Generated\n\n");
+        content.append("Invoice Details:\n");
+        content.append("=====================================\n");
+        content.append("Invoice Number: ").append(invoice.getInvoiceNumber()).append("\n");
+        content.append("Invoice Date: ").append(invoice.getInvoiceDate().format(formatter)).append("\n");
+        content.append("Order ID: ").append(invoice.getOrderId()).append("\n");
+        content.append("Total Amount: ₹").append(String.format("%.2f", invoice.getTotalAmount())).append("\n\n");
+        content.append("Customer Details:\n");
+        content.append("-------------------------------------\n");
+        content.append("Name: ").append(user.getFullName()).append("\n");
+        content.append("Email: ").append(user.getEmail()).append("\n");
+        content.append("User ID: ").append(user.getId()).append("\n\n");
+        content.append("The invoice PDF is attached to this email.\n\n");
+        content.append("---\n");
+        content.append("Automated notification from Ecommerce System");
 
         return content.toString();
     }

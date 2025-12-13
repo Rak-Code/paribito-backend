@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final InvoiceService invoiceService;
 
     @Override
     public OrderResponseDTO createOrder(OrderRequestDTO dto) {
@@ -84,9 +86,50 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
 
-        order.setStatus(Order.Status.valueOf(status.toLowerCase()));
+        Order.Status newStatus = Order.Status.valueOf(status.toLowerCase());
+        Order.Status oldStatus = order.getStatus();
+        order.setStatus(newStatus);
 
-        return toDTO(orderRepository.save(order));
+        Order savedOrder = orderRepository.save(order);
+
+        // Generate and send invoice when order is delivered
+        if (newStatus == Order.Status.delivered && oldStatus != Order.Status.delivered) {
+            try {
+                User user = userRepository.findById(order.getUserId())
+                        .orElseThrow(() -> new ResourceNotFoundException("User", "id", order.getUserId()));
+                
+                // Generate invoice (this will be done asynchronously in a separate thread)
+                generateAndSendInvoice(savedOrder, user);
+                
+                log.info("Invoice generation triggered for delivered order: {}", orderId);
+            } catch (Exception e) {
+                log.error("Failed to trigger invoice generation for order: {}", orderId, e);
+                // Don't fail the status update if invoice generation fails
+            }
+        }
+
+        return toDTO(savedOrder);
+    }
+
+    @Async
+    private void generateAndSendInvoice(Order order, User user) {
+        try {
+            log.info("Async invoice generation started for order: {}", order.getId());
+            
+            // Generate invoice
+            com.ecommerce.project.entity.Invoice invoice = invoiceService.generateInvoice(order, user);
+            
+            // Download PDF data
+            byte[] pdfData = invoiceService.downloadInvoicePdf(invoice.getId());
+            
+            // Send emails with invoice attachment
+            emailService.sendInvoiceToCustomer(invoice, user, pdfData);
+            emailService.sendInvoiceToAdmin(invoice, user, pdfData);
+            
+            log.info("Invoice generated and emailed successfully for order: {}", order.getId());
+        } catch (Exception e) {
+            log.error("Failed to generate and send invoice for order: {}", order.getId(), e);
+        }
     }
 
     @Override
