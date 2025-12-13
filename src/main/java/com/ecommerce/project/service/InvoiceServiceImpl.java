@@ -152,6 +152,9 @@ public class InvoiceServiceImpl implements InvoiceService {
         InputStream templateStream = new ClassPathResource("invoice_template.jrxml").getInputStream();
         JasperReport jasperReport = JasperCompileManager.compileReport(templateStream);
 
+        // Load logo image
+        InputStream logoStream = new ClassPathResource("images/logo.png").getInputStream();
+
         // Prepare parameters
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("invoiceNumber", invoice.getInvoiceNumber());
@@ -163,6 +166,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         parameters.put("subtotal", invoice.getSubtotal());
         parameters.put("taxAmount", invoice.getTaxAmount());
         parameters.put("totalAmount", invoice.getTotalAmount());
+        parameters.put("logoPath", logoStream);
 
         // Prepare data source
         List<InvoiceItem> items = new ArrayList<>();

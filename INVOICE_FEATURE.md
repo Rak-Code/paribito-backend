@@ -57,6 +57,7 @@ Returns: ZIP file containing all invoices
 ## Invoice Template
 
 The invoice includes:
+- **Company logo** (from resources/images/logo.png)
 - Company name (Adita Enterprise India)
 - Invoice number (auto-generated: INV-YYYYMMDDHHMMSS-XXXX)
 - Invoice date

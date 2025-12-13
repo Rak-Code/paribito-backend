@@ -13,6 +13,7 @@
     <parameter name="subtotal" class="java.lang.Double"/>
     <parameter name="taxAmount" class="java.lang.Double"/>
     <parameter name="totalAmount" class="java.lang.Double"/>
+    <parameter name="logoPath" class="java.lang.String"/>
     
     <field name="productId" class="java.lang.String"/>
     <field name="quantity" class="java.lang.Integer"/>
@@ -20,65 +21,70 @@
     <field name="total" class="java.lang.Double"/>
     
     <title>
-        <band height="150">
+        <band height="180">
+            <!-- Logo Image -->
+            <image hAlign="Center" vAlign="Middle">
+                <reportElement x="227" y="0" width="100" height="50"/>
+                <imageExpression><![CDATA[$P{logoPath}]]></imageExpression>
+            </image>
             <staticText>
-                <reportElement x="0" y="0" width="555" height="30"/>
+                <reportElement x="0" y="55" width="555" height="30"/>
                 <textElement textAlignment="Center">
                     <font size="20" isBold="true"/>
                 </textElement>
                 <text><![CDATA[INVOICE]]></text>
             </staticText>
             <staticText>
-                <reportElement x="0" y="35" width="555" height="20"/>
+                <reportElement x="0" y="90" width="555" height="20"/>
                 <textElement textAlignment="Center">
                     <font size="12"/>
                 </textElement>
                 <text><![CDATA[Adita Enterprise India]]></text>
             </staticText>
             <textField>
-                <reportElement x="400" y="70" width="155" height="15"/>
+                <reportElement x="400" y="115" width="155" height="15"/>
                 <textElement textAlignment="Right">
                     <font size="10" isBold="true"/>
                 </textElement>
                 <textFieldExpression><![CDATA["Invoice #: " + $P{invoiceNumber}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="400" y="85" width="155" height="15"/>
+                <reportElement x="400" y="130" width="155" height="15"/>
                 <textElement textAlignment="Right">
                     <font size="9"/>
                 </textElement>
                 <textFieldExpression><![CDATA["Date: " + $P{invoiceDate}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="400" y="100" width="155" height="15"/>
+                <reportElement x="400" y="145" width="155" height="15"/>
                 <textElement textAlignment="Right">
                     <font size="9"/>
                 </textElement>
                 <textFieldExpression><![CDATA["Order ID: " + $P{orderId}]]></textFieldExpression>
             </textField>
             <staticText>
-                <reportElement x="0" y="70" width="80" height="15"/>
+                <reportElement x="0" y="115" width="80" height="15"/>
                 <textElement>
                     <font size="10" isBold="true"/>
                 </textElement>
                 <text><![CDATA[Bill To:]]></text>
             </staticText>
             <textField>
-                <reportElement x="0" y="85" width="300" height="15"/>
+                <reportElement x="0" y="130" width="300" height="15"/>
                 <textElement>
                     <font size="9"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{customerName}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="100" width="300" height="15"/>
+                <reportElement x="0" y="145" width="300" height="15"/>
                 <textElement>
                     <font size="9"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{customerEmail}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="115" width="300" height="30"/>
+                <reportElement x="0" y="160" width="300" height="15"/>
                 <textElement>
                     <font size="9"/>
                 </textElement>

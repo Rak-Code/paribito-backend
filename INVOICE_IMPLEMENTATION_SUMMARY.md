@@ -189,6 +189,8 @@ See `test-invoice-generation.md` for detailed testing guide.
 ## 🎨 Invoice Sample
 
 ```
+                    [COMPANY LOGO]
+                    
                         INVOICE
                 Adita Enterprise India
 
