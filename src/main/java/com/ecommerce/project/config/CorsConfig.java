@@ -30,6 +30,7 @@ public class CorsConfig {
         allPatterns.add("https://*.railway.app");
         allPatterns.add("https://*.lovable.app");
         allPatterns.add("http://localhost:*");
+        allPatterns.add("theparibito.com");
         
         // Hard-coded specific origins for guaranteed access
         allPatterns.add("https://paribito20.vercel.app");
