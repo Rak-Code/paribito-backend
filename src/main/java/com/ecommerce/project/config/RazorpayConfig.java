@@ -27,4 +27,11 @@ public class RazorpayConfig {
                 .defaultHeader("Content-Type", "application/json")
                 .build();
     }
+
+    @Bean
+    public RestClient restClient() {
+        return RestClient.builder()
+                .defaultHeader("Content-Type", "application/json")
+                .build();
+    }
 }
