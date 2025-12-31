@@ -46,9 +46,10 @@ public class ProductServiceImpl implements ProductService {
         product.setDescription(dto.description());
         product.setCategoryId(dto.categoryId());
         product.setPrice(dto.price());
+        product.setSizeTierPricing(dto.sizeTierPricing());
+        product.setAvailableSizes(dto.availableSizes());
         product.setStockQuantity(dto.stockQuantity());
         product.setImageUrls(dto.imageUrls());
-        product.setSize(dto.size());
         product.setColor(dto.color());
 
         Product saved = productRepository.save(product);
@@ -89,9 +90,10 @@ public class ProductServiceImpl implements ProductService {
         product.setDescription(dto.description());
         product.setCategoryId(dto.categoryId());
         product.setPrice(dto.price());
+        product.setSizeTierPricing(dto.sizeTierPricing());
+        product.setAvailableSizes(dto.availableSizes());
         product.setStockQuantity(dto.stockQuantity());
         product.setImageUrls(imageUrls);
-        product.setSize(dto.size());
         product.setColor(dto.color());
 
         Product saved = productRepository.save(product);
@@ -120,9 +122,10 @@ public class ProductServiceImpl implements ProductService {
         product.setDescription(dto.description());
         product.setCategoryId(dto.categoryId());
         product.setPrice(dto.price());
+        product.setSizeTierPricing(dto.sizeTierPricing());
+        product.setAvailableSizes(dto.availableSizes());
         product.setStockQuantity(dto.stockQuantity());
         product.setImageUrls(dto.imageUrls());
-        product.setSize(dto.size());
         product.setColor(dto.color());
 
         Product updated = productRepository.save(product);
@@ -178,9 +181,10 @@ public class ProductServiceImpl implements ProductService {
         product.setDescription(dto.description());
         product.setCategoryId(dto.categoryId());
         product.setPrice(dto.price());
+        product.setSizeTierPricing(dto.sizeTierPricing());
+        product.setAvailableSizes(dto.availableSizes());
         product.setStockQuantity(dto.stockQuantity());
         product.setImageUrls(imageUrls);
-        product.setSize(dto.size());
         product.setColor(dto.color());
 
         Product updated = productRepository.save(product);
@@ -283,10 +287,11 @@ public class ProductServiceImpl implements ProductService {
                 p.getName(),
                 p.getDescription(),
                 p.getPrice(),
+                p.getSizeTierPricing(),
+                p.getAvailableSizes(),
                 p.getStockQuantity(),
                 p.getCategoryId(),
                 p.getColor(),
-                p.getSize(),
                 p.getImageUrls()
         );
     }

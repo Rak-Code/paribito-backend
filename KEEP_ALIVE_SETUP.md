@@ -112,6 +112,14 @@ If you prefer not to use GitHub Actions, consider:
 
 ## Notes
 
+**Internal Keep-Alive Service:**
+- No external dependencies or usage limits
+- Runs as long as the application is running
+- More reliable than external services
+- Uses minimal resources (simple HTTP GET request)
+
+**GitHub Actions (Optional):**
 - GitHub Actions has usage limits on free tier (2,000 minutes/month)
 - Each ping takes ~10 seconds = ~5 hours/month usage
 - Well within free tier limits
+- Provides external backup if internal service fails

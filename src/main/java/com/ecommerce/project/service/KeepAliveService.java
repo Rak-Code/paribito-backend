@@ -14,7 +14,7 @@ public class KeepAliveService {
 
     private final RestClient restClient;
 
-    @Value("${app.url:https://swiftcart-backend-x4ku.onrender.com}")
+    @Value("${app.url:APP_URL:https://paribito-backend.onrender.com}")
     private String appUrl;
 
     @Value("${app.health-check.endpoint:/api/health}")

@@ -4,6 +4,7 @@ import com.ecommerce.project.entity.Product;
 import jakarta.validation.constraints.*;
 
 import java.util.List;
+import java.util.Map;
 
 public record ProductRequestDTO(
         @NotBlank(message = "Product name is required")
@@ -17,16 +18,21 @@ public record ProductRequestDTO(
         @NotBlank(message = "Category ID is required")
         String categoryId,
 
-        @Positive(message = "Price must be positive")
-        @DecimalMin(value = "0.01", message = "Price must be at least 0.01")
+        @Positive(message = "Base price must be positive")
+        @DecimalMin(value = "0.01", message = "Base price must be at least 0.01")
         double price,
+
+        // Size tier pricing - allows different prices for different size ranges
+        Map<Product.SizeTier, Double> sizeTierPricing,
+
+        // Available sizes for this product
+        @NotEmpty(message = "At least one size must be available")
+        List<Product.Size> availableSizes,
 
         @Min(value = 0, message = "Stock quantity cannot be negative")
         int stockQuantity,
 
         List<String> imageUrls,
-
-        Product.Size size,
 
         @Size(max = 50, message = "Color name must not exceed 50 characters")
         String color
