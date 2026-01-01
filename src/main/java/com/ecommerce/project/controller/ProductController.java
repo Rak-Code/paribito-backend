@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/products")
@@ -46,19 +47,16 @@ public class ProductController {
             @RequestParam(value = "images", required = false) MultipartFile[] images) {
         
         try {
-            // Parse available sizes
-            List<Product.Size> availableSizes = objectMapper.readValue(
-                availableSizesJson, 
-                new TypeReference<List<Product.Size>>() {}
-            );
+            // Validate required fields
+            validateProductInputs(name, description, categoryId, price, stockQuantity);
+            
+            // Parse available sizes with better error handling
+            List<Product.Size> availableSizes = parseAvailableSizes(availableSizesJson);
             
             // Parse size tier pricing if provided
             Map<Product.SizeTier, Double> sizeTierPricing = null;
             if (sizeTierPricingJson != null && !sizeTierPricingJson.isBlank()) {
-                sizeTierPricing = objectMapper.readValue(
-                    sizeTierPricingJson, 
-                    new TypeReference<Map<Product.SizeTier, Double>>() {}
-                );
+                sizeTierPricing = parseSizeTierPricing(sizeTierPricingJson);
             }
             
             ProductRequestDTO dto = new ProductRequestDTO(
@@ -69,6 +67,9 @@ public class ProductController {
             ProductResponseDTO response = productService.createProductWithImages(dto, images);
             return ResponseEntity.status(201).body(response);
             
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid input for product creation: {}", e.getMessage());
+            throw e; // Re-throw to be handled by GlobalExceptionHandler
         } catch (Exception e) {
             log.error("Error creating product: {}", e.getMessage());
             throw new RuntimeException("Failed to create product: " + e.getMessage());
@@ -91,19 +92,16 @@ public class ProductController {
             @RequestParam(value = "keepExistingImages", required = false, defaultValue = "true") boolean keepExistingImages) {
         
         try {
-            // Parse available sizes
-            List<Product.Size> availableSizes = objectMapper.readValue(
-                availableSizesJson, 
-                new TypeReference<List<Product.Size>>() {}
-            );
+            // Validate required fields
+            validateProductInputs(name, description, categoryId, price, stockQuantity);
+            
+            // Parse available sizes with better error handling
+            List<Product.Size> availableSizes = parseAvailableSizes(availableSizesJson);
             
             // Parse size tier pricing if provided
             Map<Product.SizeTier, Double> sizeTierPricing = null;
             if (sizeTierPricingJson != null && !sizeTierPricingJson.isBlank()) {
-                sizeTierPricing = objectMapper.readValue(
-                    sizeTierPricingJson, 
-                    new TypeReference<Map<Product.SizeTier, Double>>() {}
-                );
+                sizeTierPricing = parseSizeTierPricing(sizeTierPricingJson);
             }
             
             ProductRequestDTO dto = new ProductRequestDTO(
@@ -114,6 +112,9 @@ public class ProductController {
             ProductResponseDTO response = productService.updateProductWithImages(id, dto, images, keepExistingImages);
             return ResponseEntity.ok(response);
             
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid input for product update: {}", e.getMessage());
+            throw e; // Re-throw to be handled by GlobalExceptionHandler
         } catch (Exception e) {
             log.error("Error updating product: {}", e.getMessage());
             throw new RuntimeException("Failed to update product: " + e.getMessage());
@@ -199,5 +200,86 @@ public class ProductController {
             .toList();
             
         return ResponseEntity.ok(sizePricing);
+    }
+
+    /**
+     * Helper method to parse available sizes JSON with better error handling
+     */
+    private List<Product.Size> parseAvailableSizes(String availableSizesJson) {
+        if (availableSizesJson == null || availableSizesJson.isBlank()) {
+            throw new IllegalArgumentException("Available sizes cannot be empty");
+        }
+
+        try {
+            // First try to parse as proper JSON array
+            return objectMapper.readValue(availableSizesJson, new TypeReference<List<Product.Size>>() {});
+        } catch (Exception e) {
+            log.warn("Failed to parse availableSizes as JSON array: {}. Attempting fallback parsing.", e.getMessage());
+            
+            // Fallback: try to handle common malformed formats
+            try {
+                // Remove brackets and split by comma, then clean up each size
+                String cleaned = availableSizesJson.trim();
+                if (cleaned.startsWith("[") && cleaned.endsWith("]")) {
+                    cleaned = cleaned.substring(1, cleaned.length() - 1);
+                }
+                
+                String[] sizeStrings = cleaned.split(",");
+                List<Product.Size> sizes = new ArrayList<>();
+                
+                for (String sizeStr : sizeStrings) {
+                    String trimmed = sizeStr.trim().replaceAll("[\"\']", ""); // Remove quotes
+                    try {
+                        Product.Size size = Product.Size.valueOf(trimmed.toUpperCase());
+                        sizes.add(size);
+                    } catch (IllegalArgumentException ex) {
+                        log.error("Invalid size value: {}", trimmed);
+                        throw new IllegalArgumentException("Invalid size: " + trimmed + ". Valid sizes are: " + Arrays.toString(Product.Size.values()));
+                    }
+                }
+                
+                if (sizes.isEmpty()) {
+                    throw new IllegalArgumentException("No valid sizes found in: " + availableSizesJson);
+                }
+                
+                return sizes;
+            } catch (Exception fallbackException) {
+                log.error("Failed to parse availableSizes even with fallback: {}", fallbackException.getMessage());
+                throw new IllegalArgumentException("Invalid availableSizes format. Expected JSON array like [\"S\",\"M\",\"L\"] but got: " + availableSizesJson);
+            }
+        }
+    }
+
+    /**
+     * Helper method to parse size tier pricing JSON with better error handling
+     */
+    private Map<Product.SizeTier, Double> parseSizeTierPricing(String sizeTierPricingJson) {
+        try {
+            return objectMapper.readValue(sizeTierPricingJson, new TypeReference<Map<Product.SizeTier, Double>>() {});
+        } catch (Exception e) {
+            log.error("Failed to parse sizeTierPricing: {}", e.getMessage());
+            throw new IllegalArgumentException("Invalid sizeTierPricing format. Expected JSON object like {\"STANDARD\":100.0} but got: " + sizeTierPricingJson);
+        }
+    }
+
+    /**
+     * Helper method to validate product input parameters
+     */
+    private void validateProductInputs(String name, String description, String categoryId, double price, int stockQuantity) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Product name cannot be empty");
+        }
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Product description cannot be empty");
+        }
+        if (categoryId == null || categoryId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Category ID cannot be empty");
+        }
+        if (price < 0) {
+            throw new IllegalArgumentException("Product price cannot be negative");
+        }
+        if (stockQuantity < 0) {
+            throw new IllegalArgumentException("Stock quantity cannot be negative");
+        }
     }
 }
