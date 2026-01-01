@@ -3,9 +3,14 @@ package com.ecommerce.project.service;
 import com.ecommerce.project.dto.RazorpayOrderRequestDTO;
 import com.ecommerce.project.dto.RazorpayOrderResponseDTO;
 import com.ecommerce.project.dto.RazorpayPaymentVerificationDTO;
+import com.ecommerce.project.entity.Order;
 import com.ecommerce.project.entity.Payment;
+import com.ecommerce.project.entity.User;
+import com.ecommerce.project.repository.OrderRepository;
 import com.ecommerce.project.repository.PaymentRepository;
+import com.ecommerce.project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -20,10 +25,14 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RazorpayServiceImpl implements RazorpayService {
 
     private final RestClient razorpayRestClient;
     private final PaymentRepository paymentRepository;
+    private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
 
     @Value("${razorpay.key.id}")
     private String keyId;
@@ -102,7 +111,41 @@ public class RazorpayServiceImpl implements RazorpayService {
             payment.setTransactionId(dto.razorpayPaymentId());
             payment.setPaymentDate(LocalDateTime.now());
 
-            return paymentRepository.save(payment);
+            Payment savedPayment = paymentRepository.save(payment);
+
+            // Trigger emails after successful payment verification
+            // Wrapped in try-catch to prevent payment failure on email errors
+            try {
+                Order order = orderRepository.findById(payment.getOrderId())
+                        .orElse(null);
+                
+                if (order != null) {
+                    User user = userRepository.findById(order.getUserId())
+                            .orElse(null);
+                    
+                    if (user != null) {
+                        // Send payment success email to customer
+                        emailService.sendPaymentSuccessEmail(savedPayment, order, user);
+                        
+                        // Send order confirmation email to customer
+                        emailService.sendOrderConfirmationToCustomer(order, user);
+                        
+                        // Send order notification email to admin
+                        emailService.sendOrderNotificationToAdmin(order, user);
+                        
+                        log.info("Payment verification emails triggered for order: {}", order.getId());
+                    } else {
+                        log.warn("User not found for order: {}, skipping email notifications", order.getId());
+                    }
+                } else {
+                    log.warn("Order not found for payment: {}, skipping email notifications", payment.getOrderId());
+                }
+            } catch (Exception e) {
+                // Log the error but don't fail the payment verification
+                log.error("Failed to send payment/order emails for payment: {}", savedPayment.getId(), e);
+            }
+
+            return savedPayment;
 
         } catch (Exception e) {
             throw new RuntimeException("Payment verification failed: " + e.getMessage(), e);

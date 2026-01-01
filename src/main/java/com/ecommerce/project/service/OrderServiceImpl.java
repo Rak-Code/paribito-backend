@@ -40,22 +40,13 @@ public class OrderServiceImpl implements OrderService {
 
         Order saved = orderRepository.save(order);
 
-        // Send emails asynchronously
-        try {
-            User user = userRepository.findById(dto.userId())
-                    .orElseThrow(() -> new ResourceNotFoundException("User", "id", dto.userId()));
-            
-            // Send confirmation email to customer
-            emailService.sendOrderConfirmationToCustomer(saved, user);
-            
-            // Send notification email to admin
-            emailService.sendOrderNotificationToAdmin(saved, user);
-            
-            log.info("Order emails triggered for order: {}", saved.getId());
-        } catch (Exception e) {
-            log.error("Failed to send order emails for order: {}", saved.getId(), e);
-            // Don't fail the order creation if email fails
-        }
+        // NOTE: Email notifications are NOT sent here.
+        // Order confirmation and admin notification emails are triggered
+        // only after payment verification in RazorpayServiceImpl.
+        // This ensures customers don't receive premature notifications
+        // before payment is confirmed. (Requirements 2.2, 11.2)
+
+        log.info("Order created with id: {} - awaiting payment verification for email notifications", saved.getId());
 
         return toDTO(saved);
     }
@@ -147,7 +138,24 @@ public class OrderServiceImpl implements OrderService {
         }
 
         order.setStatus(Order.Status.cancelled);
-        orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+
+        // Send cancellation emails to customer and admin (Requirements 4.1, 5.1)
+        try {
+            User user = userRepository.findById(order.getUserId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "id", order.getUserId()));
+            
+            // Send cancellation email to customer
+            emailService.sendOrderCancellationToCustomer(savedOrder, user);
+            
+            // Send cancellation notification to admin
+            emailService.sendOrderCancellationToAdmin(savedOrder, user);
+            
+            log.info("Cancellation emails triggered for order: {}", orderId);
+        } catch (Exception e) {
+            log.error("Failed to send cancellation emails for order: {}", orderId, e);
+            // Don't fail the cancellation if email fails
+        }
     }
 
     @Override
