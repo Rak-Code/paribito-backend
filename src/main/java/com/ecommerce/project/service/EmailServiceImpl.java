@@ -63,12 +63,15 @@ public class EmailServiceImpl implements EmailService {
      * @return true if email was sent successfully, false otherwise
      */
     private boolean sendHtmlEmail(String to, String subject, String htmlContent) {
+        log.info("=== EMAIL DEBUG: Attempting to send email to: {}, subject: {}", to, subject);
+        
         if (!isValidEmail(to)) {
-            log.warn("Invalid email address, skipping email send: {}", to);
+            log.warn("=== EMAIL VALIDATION: Invalid email address, skipping email send: {}", to);
             return false;
         }
 
         try {
+            log.info("=== EMAIL DEBUG: Creating MimeMessage for: {}", to);
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             
@@ -77,20 +80,21 @@ public class EmailServiceImpl implements EmailService {
             helper.setSubject(subject);
             helper.setText(htmlContent, true); // true indicates HTML content
             
+            log.info("=== EMAIL DEBUG: Sending email via JavaMailSender to: {}", to);
             mailSender.send(message);
-            log.info("Email sent successfully to: {}", to);
+            log.info("=== EMAIL SUCCESS: Email sent successfully to: {}", to);
             return true;
         } catch (MessagingException e) {
             // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
-            log.error("Failed to create email message for: {} - {}", to, LogSanitizer.sanitizeException(e));
+            log.error("=== EMAIL ERROR: Failed to create email message for: {} - {}", to, LogSanitizer.sanitizeException(e));
             return false;
         } catch (MailException e) {
             // Sanitize SMTP errors to prevent credential exposure (Requirements 10.3)
-            log.error("SMTP connection failed while sending email to: {} - {}", to, LogSanitizer.sanitizeException(e));
+            log.error("=== EMAIL ERROR: SMTP connection failed while sending email to: {} - {}", to, LogSanitizer.sanitizeException(e));
             return false;
         } catch (Exception e) {
             // Sanitize unexpected errors (Requirements 10.3)
-            log.error("Unexpected error while sending email to: {} - {}", to, LogSanitizer.sanitizeException(e));
+            log.error("=== EMAIL ERROR: Unexpected error while sending email to: {} - {}", to, LogSanitizer.sanitizeException(e));
             return false;
         }
     }
@@ -156,16 +160,22 @@ public class EmailServiceImpl implements EmailService {
     @Override
     @Async("emailExecutor")
     public void sendPaymentSuccessEmail(Payment payment, Order order, User user) {
+        log.info("=== EMAIL DEBUG: Starting sendPaymentSuccessEmail for user: {}, order: {}", 
+                user.getEmail(), order.getId());
         try {
             String htmlContent = templateUtil.buildPaymentSuccessEmail(payment, order, user);
             String subject = "Payment Successful - Order #" + order.getId();
             
+            log.info("=== EMAIL DEBUG: Generated email content, attempting to send to: {}", user.getEmail());
+            
             if (sendHtmlEmail(user.getEmail(), subject, htmlContent)) {
-                log.info("Payment success email sent to customer: {}", user.getEmail());
+                log.info("=== EMAIL SUCCESS: Payment success email sent to customer: {}", user.getEmail());
+            } else {
+                log.error("=== EMAIL FAILED: Payment success email failed to send to customer: {}", user.getEmail());
             }
         } catch (Exception e) {
             // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
-            log.error("Failed to send payment success email to customer: {} - {}", 
+            log.error("=== EMAIL ERROR: Failed to send payment success email to customer: {} - {}", 
                      user.getEmail(), LogSanitizer.sanitizeException(e));
             // Do not rethrow - email failure should not affect business operations
         }

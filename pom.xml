@@ -95,13 +95,11 @@
 		-->
 
 		<!-- Dotenv for loading .env files -->
-		<!-- Commented out - using Railway environment variables instead
 		<dependency>
 			<groupId>io.github.cdimascio</groupId>
 			<artifactId>dotenv-java</artifactId>
 			<version>3.0.0</version>
 		</dependency>
-		-->
 
 		<!-- Spring Boot Mail Starter -->
 		<dependency>
