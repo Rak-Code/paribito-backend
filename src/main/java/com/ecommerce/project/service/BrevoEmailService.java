@@ -7,45 +7,60 @@ import com.ecommerce.project.entity.Product;
 import com.ecommerce.project.entity.User;
 import com.ecommerce.project.util.EmailTemplateUtil;
 import com.ecommerce.project.util.LogSanitizer;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.mail.MailException;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Implementation of EmailService that sends HTML-formatted emails
- * using templates from EmailTemplateUtil.
+ * Brevo (Sendinblue) email service implementation using HTTPS API.
+ * This bypasses SMTP port restrictions on cloud platforms like Render.
  * 
- * All email operations are asynchronous and include comprehensive error handling
- * to ensure email failures do not affect core business operations.
+ * Free tier: 300 emails/day
+ * Uses port 443 (HTTPS) - never blocked by cloud providers.
  */
 @Service
-@ConditionalOnProperty(name = "email.provider", havingValue = "smtp", matchIfMissing = true)
+@ConditionalOnProperty(name = "email.provider", havingValue = "brevo", matchIfMissing = false)
 @RequiredArgsConstructor
 @Slf4j
-public class EmailServiceImpl implements EmailService {
+public class BrevoEmailService implements EmailService {
 
-    private final JavaMailSender mailSender;
     private final EmailTemplateUtil templateUtil;
+
+    @Value("${brevo.api.key}")
+    private String apiKey;
 
     @Value("${email.from}")
     private String fromEmail;
 
+    @Value("${email.from.name:Paribito}")
+    private String fromName;
+
     @Value("${email.admin}")
     private String adminEmail;
 
+    private static final String BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+
+    private RestClient getRestClient() {
+        return RestClient.builder()
+                .baseUrl(BREVO_API_URL)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader("api-key", apiKey)
+                .build();
+    }
+
+
     /**
      * Validates an email address using a basic regex pattern.
-     * @param email the email address to validate
-     * @return true if the email is valid, false otherwise
      */
     private boolean isValidEmail(String email) {
         if (email == null || email.isBlank()) {
@@ -54,132 +69,110 @@ public class EmailServiceImpl implements EmailService {
         return email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
     }
 
-
     /**
-     * Sends an HTML email using MimeMessage.
-     * Error messages are sanitized to prevent sensitive data exposure.
-     * 
-     * @param to recipient email address
-     * @param subject email subject
-     * @param htmlContent HTML content of the email
-     * @return true if email was sent successfully, false otherwise
+     * Sends an HTML email via Brevo API.
      */
     private boolean sendHtmlEmail(String to, String subject, String htmlContent) {
-        log.info("=== EMAIL DEBUG: Attempting to send email to: {}, subject: {}", to, subject);
-        
+        log.info("=== BREVO EMAIL: Attempting to send email to: {}, subject: {}", to, subject);
+
         if (!isValidEmail(to)) {
-            log.warn("=== EMAIL VALIDATION: Invalid email address, skipping email send: {}", to);
+            log.warn("=== BREVO VALIDATION: Invalid email address, skipping: {}", to);
             return false;
         }
 
         try {
-            log.info("=== EMAIL DEBUG: Creating MimeMessage for: {}", to);
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            
-            helper.setFrom(fromEmail);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true); // true indicates HTML content
-            
-            log.info("=== EMAIL DEBUG: Sending email via JavaMailSender to: {}", to);
-            mailSender.send(message);
-            log.info("=== EMAIL SUCCESS: Email sent successfully to: {}", to);
+            Map<String, Object> emailRequest = Map.of(
+                "sender", Map.of("name", fromName, "email", fromEmail),
+                "to", List.of(Map.of("email", to)),
+                "subject", subject,
+                "htmlContent", htmlContent
+            );
+
+            String response = getRestClient()
+                .post()
+                .body(emailRequest)
+                .retrieve()
+                .body(String.class);
+
+            log.info("=== BREVO SUCCESS: Email sent to: {}, response: {}", to, response);
             return true;
-        } catch (MessagingException e) {
-            // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
-            log.error("=== EMAIL ERROR: Failed to create email message for: {} - {}", to, LogSanitizer.sanitizeException(e));
-            return false;
-        } catch (MailException e) {
-            // Sanitize SMTP errors to prevent credential exposure (Requirements 10.3)
-            log.error("=== EMAIL ERROR: SMTP connection failed while sending email to: {} - {}", to, LogSanitizer.sanitizeException(e));
-            return false;
+
         } catch (Exception e) {
-            // Sanitize unexpected errors (Requirements 10.3)
-            log.error("=== EMAIL ERROR: Unexpected error while sending email to: {} - {}", to, LogSanitizer.sanitizeException(e));
+            log.error("=== BREVO ERROR: Failed to send email to: {} - {}", to, LogSanitizer.sanitizeException(e));
             return false;
         }
     }
 
     /**
-     * Sends an HTML email with a PDF attachment.
-     * Error messages are sanitized to prevent sensitive data exposure.
-     * 
-     * @param to recipient email address
-     * @param subject email subject
-     * @param htmlContent HTML content of the email
-     * @param attachmentName name of the attachment file
-     * @param attachmentData PDF data as byte array
-     * @return true if email was sent successfully, false otherwise
+     * Sends an HTML email with PDF attachment via Brevo API.
      */
-    private boolean sendHtmlEmailWithAttachment(String to, String subject, String htmlContent, 
+    private boolean sendHtmlEmailWithAttachment(String to, String subject, String htmlContent,
                                                  String attachmentName, byte[] attachmentData) {
+        log.info("=== BREVO EMAIL: Sending email with attachment to: {}", to);
+
         if (!isValidEmail(to)) {
-            log.warn("Invalid email address, skipping email send: {}", to);
+            log.warn("=== BREVO VALIDATION: Invalid email address, skipping: {}", to);
             return false;
         }
 
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            Map<String, Object> emailRequest;
             
-            helper.setFrom(fromEmail);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-            
-            // Try to add attachment
-            try {
-                if (attachmentData != null && attachmentData.length > 0) {
-                    helper.addAttachment(attachmentName, new ByteArrayResource(attachmentData));
-                }
-            } catch (MessagingException e) {
-                // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
-                log.error("Failed to attach PDF to email, sending without attachment - {}", 
-                         LogSanitizer.sanitizeException(e));
-                // Continue sending email without attachment
+            if (attachmentData != null && attachmentData.length > 0) {
+                String base64Content = Base64.getEncoder().encodeToString(attachmentData);
+                emailRequest = Map.of(
+                    "sender", Map.of("name", fromName, "email", fromEmail),
+                    "to", List.of(Map.of("email", to)),
+                    "subject", subject,
+                    "htmlContent", htmlContent,
+                    "attachment", List.of(Map.of(
+                        "name", attachmentName,
+                        "content", base64Content
+                    ))
+                );
+            } else {
+                emailRequest = Map.of(
+                    "sender", Map.of("name", fromName, "email", fromEmail),
+                    "to", List.of(Map.of("email", to)),
+                    "subject", subject,
+                    "htmlContent", htmlContent
+                );
             }
-            
-            mailSender.send(message);
-            log.info("Email with attachment sent successfully to: {}", to);
+
+            String response = getRestClient()
+                .post()
+                .body(emailRequest)
+                .retrieve()
+                .body(String.class);
+
+            log.info("=== BREVO SUCCESS: Email with attachment sent to: {}", to);
             return true;
-        } catch (MessagingException e) {
-            // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
-            log.error("Failed to create email message for: {} - {}", to, LogSanitizer.sanitizeException(e));
-            return false;
-        } catch (MailException e) {
-            // Sanitize SMTP errors to prevent credential exposure (Requirements 10.3)
-            log.error("SMTP connection failed while sending email to: {} - {}", to, LogSanitizer.sanitizeException(e));
-            return false;
+
         } catch (Exception e) {
-            // Sanitize unexpected errors (Requirements 10.3)
-            log.error("Unexpected error while sending email to: {} - {}", to, LogSanitizer.sanitizeException(e));
+            log.error("=== BREVO ERROR: Failed to send email with attachment to: {} - {}", 
+                     to, LogSanitizer.sanitizeException(e));
             return false;
         }
     }
 
+
+    // ==================== EmailService Interface Implementation ====================
 
     @Override
     @Async("emailExecutor")
     public void sendPaymentSuccessEmail(Payment payment, Order order, User user) {
-        log.info("=== EMAIL DEBUG: Starting sendPaymentSuccessEmail for user: {}, order: {}", 
+        log.info("=== BREVO: Starting sendPaymentSuccessEmail for user: {}, order: {}", 
                 user.getEmail(), order.getId());
         try {
             String htmlContent = templateUtil.buildPaymentSuccessEmail(payment, order, user);
             String subject = "Payment Successful - Order #" + order.getId();
             
-            log.info("=== EMAIL DEBUG: Generated email content, attempting to send to: {}", user.getEmail());
-            
             if (sendHtmlEmail(user.getEmail(), subject, htmlContent)) {
-                log.info("=== EMAIL SUCCESS: Payment success email sent to customer: {}", user.getEmail());
-            } else {
-                log.error("=== EMAIL FAILED: Payment success email failed to send to customer: {}", user.getEmail());
+                log.info("=== BREVO SUCCESS: Payment success email sent to: {}", user.getEmail());
             }
         } catch (Exception e) {
-            // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
-            log.error("=== EMAIL ERROR: Failed to send payment success email to customer: {} - {}", 
+            log.error("=== BREVO ERROR: Failed to send payment success email: {} - {}", 
                      user.getEmail(), LogSanitizer.sanitizeException(e));
-            // Do not rethrow - email failure should not affect business operations
         }
     }
 
@@ -194,8 +187,7 @@ public class EmailServiceImpl implements EmailService {
                 log.info("Order confirmation email sent to customer: {}", user.getEmail());
             }
         } catch (Exception e) {
-            // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
-            log.error("Failed to send order confirmation email to customer: {} - {}", 
+            log.error("Failed to send order confirmation email: {} - {}", 
                      user.getEmail(), LogSanitizer.sanitizeException(e));
         }
     }
@@ -211,7 +203,6 @@ public class EmailServiceImpl implements EmailService {
                 log.info("Order notification email sent to admin: {}", adminEmail);
             }
         } catch (Exception e) {
-            // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
             log.error("Failed to send order notification email to admin - {}", LogSanitizer.sanitizeException(e));
         }
     }
@@ -227,8 +218,7 @@ public class EmailServiceImpl implements EmailService {
                 log.info("Order cancellation email sent to customer: {}", user.getEmail());
             }
         } catch (Exception e) {
-            // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
-            log.error("Failed to send order cancellation email to customer: {} - {}", 
+            log.error("Failed to send order cancellation email: {} - {}", 
                      user.getEmail(), LogSanitizer.sanitizeException(e));
         }
     }
@@ -244,11 +234,9 @@ public class EmailServiceImpl implements EmailService {
                 log.info("Order cancellation notification sent to admin: {}", adminEmail);
             }
         } catch (Exception e) {
-            // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
             log.error("Failed to send order cancellation email to admin - {}", LogSanitizer.sanitizeException(e));
         }
     }
-
 
     @Override
     @Async("emailExecutor")
@@ -261,8 +249,7 @@ public class EmailServiceImpl implements EmailService {
                 log.info("Cart reminder email sent to: {}", user.getEmail());
             }
         } catch (Exception e) {
-            // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
-            log.error("Failed to send cart reminder email to: {} - {}", 
+            log.error("Failed to send cart reminder email: {} - {}", 
                      user.getEmail(), LogSanitizer.sanitizeException(e));
         }
     }
@@ -278,8 +265,7 @@ public class EmailServiceImpl implements EmailService {
                 log.info("Wishlist reminder email sent to: {}", user.getEmail());
             }
         } catch (Exception e) {
-            // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
-            log.error("Failed to send wishlist reminder email to: {} - {}", 
+            log.error("Failed to send wishlist reminder email: {} - {}", 
                      user.getEmail(), LogSanitizer.sanitizeException(e));
         }
     }
@@ -296,8 +282,7 @@ public class EmailServiceImpl implements EmailService {
                 log.info("Invoice email sent to customer: {}", user.getEmail());
             }
         } catch (Exception e) {
-            // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
-            log.error("Failed to send invoice email to customer: {} - {}", 
+            log.error("Failed to send invoice email: {} - {}", 
                      user.getEmail(), LogSanitizer.sanitizeException(e));
         }
     }
@@ -314,7 +299,6 @@ public class EmailServiceImpl implements EmailService {
                 log.info("Invoice email sent to admin: {}", adminEmail);
             }
         } catch (Exception e) {
-            // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
             log.error("Failed to send invoice email to admin - {}", LogSanitizer.sanitizeException(e));
         }
     }
