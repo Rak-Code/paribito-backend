@@ -69,6 +69,10 @@ public class OrderController {
             @RequestParam(required = false, defaultValue = "orderDate") String sortBy,
             @RequestParam(required = false, defaultValue = "DESC") String sortDirection) {
         
+        // NOTE: This endpoint now only returns orders with successful payments
+        // Unpaid or abandoned checkout attempts will not appear in admin panel
+        // This prevents confusion between genuine orders and incomplete checkouts
+        
         // Handle pagination if page and size are provided
         if (page != null && size != null) {
             Sort.Direction direction = sortDirection.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;

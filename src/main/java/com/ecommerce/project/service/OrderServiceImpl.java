@@ -3,11 +3,13 @@ package com.ecommerce.project.service;
 import com.ecommerce.project.dto.OrderRequestDTO;
 import com.ecommerce.project.dto.OrderResponseDTO;
 import com.ecommerce.project.entity.Order;
+import com.ecommerce.project.entity.Payment;
 import com.ecommerce.project.entity.User;
 import com.ecommerce.project.exception.BadRequestException;
 import com.ecommerce.project.exception.ResourceNotFoundException;
 import com.ecommerce.project.exception.UnauthorizedException;
 import com.ecommerce.project.repository.OrderRepository;
+import com.ecommerce.project.repository.PaymentRepository;
 import com.ecommerce.project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final InvoiceService invoiceService;
+    private final PaymentRepository paymentRepository;
 
     @Override
     public OrderResponseDTO createOrder(OrderRequestDTO dto) {
@@ -160,13 +163,36 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderResponseDTO> getAllOrders() {
-        return orderRepository.findAll()
-                .stream().map(this::toDTO).toList();
+        // FIXED: Only return orders with successful payments
+        // This prevents unpaid/abandoned checkout attempts from appearing in admin panel
+        // Business rule: An order should only be visible to admin after payment is confirmed
+        
+        // Get all order IDs that have successful payments
+        List<String> paidOrderIds = paymentRepository.findCompletedPayments()
+                .stream()
+                .map(Payment::getOrderId)
+                .toList();
+        
+        // Return only orders with successful payments
+        return orderRepository.findByIdIn(paidOrderIds)
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     @Override
     public Page<OrderResponseDTO> getAllOrders(Pageable pageable) {
-        return orderRepository.findAll(pageable)
+        // FIXED: Only return orders with successful payments (paginated version)
+        // This prevents unpaid/abandoned checkout attempts from appearing in admin panel
+        
+        // Get all order IDs that have successful payments
+        List<String> paidOrderIds = paymentRepository.findCompletedPayments()
+                .stream()
+                .map(Payment::getOrderId)
+                .toList();
+        
+        // Return only orders with successful payments (paginated)
+        return orderRepository.findByIdIn(paidOrderIds, pageable)
                 .map(this::toDTO);
     }
 
