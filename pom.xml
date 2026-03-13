@@ -114,6 +114,13 @@
 			<version>2.20.26</version>
 		</dependency>
 		
+		<!-- AWS SDK for SES (Simple Email Service) -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>ses</artifactId>
+			<version>2.20.26</version>
+		</dependency>
+		
 		<!-- AWS SDK Apache HTTP Client -->
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>

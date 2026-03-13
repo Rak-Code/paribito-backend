@@ -20,6 +20,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Implementation of EmailService that sends HTML-formatted emails
  * using templates from EmailTemplateUtil.
@@ -41,6 +44,22 @@ public class EmailServiceImpl implements EmailService {
 
     @Value("${email.admin}")
     private String adminEmail;
+
+    private List<String> getAdminRecipients() {
+        if (adminEmail == null || adminEmail.isBlank()) {
+            return List.of();
+        }
+
+        String[] raw = adminEmail.split("[;,]");
+        List<String> recipients = new ArrayList<>();
+        for (String r : raw) {
+            String candidate = r == null ? null : r.trim();
+            if (isValidEmail(candidate)) {
+                recipients.add(candidate);
+            }
+        }
+        return recipients;
+    }
 
     /**
      * Validates an email address using a basic regex pattern.
@@ -206,9 +225,19 @@ public class EmailServiceImpl implements EmailService {
         try {
             String htmlContent = templateUtil.buildAdminOrderNotificationEmail(order, user);
             String subject = "New Order Received - Order #" + order.getId();
-            
-            if (sendHtmlEmail(adminEmail, subject, htmlContent)) {
-                log.info("Order notification email sent to admin: {}", adminEmail);
+
+            List<String> recipients = getAdminRecipients();
+            if (recipients.isEmpty()) {
+                log.warn("No valid admin recipients configured, skipping admin order notification for order: {}", order.getId());
+                return;
+            }
+
+            for (String recipient : recipients) {
+                if (sendHtmlEmail(recipient, subject, htmlContent)) {
+                    log.info("Order notification email sent to admin: {}", recipient);
+                } else {
+                    log.warn("Failed to send order notification email to admin: {}", recipient);
+                }
             }
         } catch (Exception e) {
             // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
@@ -239,9 +268,19 @@ public class EmailServiceImpl implements EmailService {
         try {
             String htmlContent = templateUtil.buildAdminCancellationEmail(order, user);
             String subject = "Order Cancelled - Order #" + order.getId();
-            
-            if (sendHtmlEmail(adminEmail, subject, htmlContent)) {
-                log.info("Order cancellation notification sent to admin: {}", adminEmail);
+
+            List<String> recipients = getAdminRecipients();
+            if (recipients.isEmpty()) {
+                log.warn("No valid admin recipients configured, skipping admin cancellation notification for order: {}", order.getId());
+                return;
+            }
+
+            for (String recipient : recipients) {
+                if (sendHtmlEmail(recipient, subject, htmlContent)) {
+                    log.info("Order cancellation notification sent to admin: {}", recipient);
+                } else {
+                    log.warn("Failed to send order cancellation notification to admin: {}", recipient);
+                }
             }
         } catch (Exception e) {
             // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
@@ -309,9 +348,19 @@ public class EmailServiceImpl implements EmailService {
             String htmlContent = templateUtil.buildAdminInvoiceEmail(invoice, user);
             String subject = "Invoice Generated - Order #" + invoice.getOrderId();
             String attachmentName = invoice.getInvoiceNumber() + ".pdf";
-            
-            if (sendHtmlEmailWithAttachment(adminEmail, subject, htmlContent, attachmentName, pdfData)) {
-                log.info("Invoice email sent to admin: {}", adminEmail);
+
+            List<String> recipients = getAdminRecipients();
+            if (recipients.isEmpty()) {
+                log.warn("No valid admin recipients configured, skipping invoice email for invoice: {}", invoice.getInvoiceNumber());
+                return;
+            }
+
+            for (String recipient : recipients) {
+                if (sendHtmlEmailWithAttachment(recipient, subject, htmlContent, attachmentName, pdfData)) {
+                    log.info("Invoice email sent to admin: {}", recipient);
+                } else {
+                    log.warn("Failed to send invoice email to admin: {}", recipient);
+                }
             }
         } catch (Exception e) {
             // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)

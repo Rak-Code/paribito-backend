@@ -1,10 +1,14 @@
 package com.ecommerce.project.util;
 
+import com.ecommerce.project.entity.Category;
 import com.ecommerce.project.entity.Invoice;
 import com.ecommerce.project.entity.Order;
 import com.ecommerce.project.entity.Payment;
 import com.ecommerce.project.entity.Product;
 import com.ecommerce.project.entity.User;
+import com.ecommerce.project.repository.CategoryRepository;
+import com.ecommerce.project.repository.ProductRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -15,7 +19,11 @@ import java.time.format.DateTimeFormatter;
  * All templates follow the Adita Enterprise India brand guidelines.
  */
 @Component
+@RequiredArgsConstructor
 public class EmailTemplateUtil {
+
+    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
     private static final String BRAND_NAME = "Adita Enterprise India";
     private static final String BRAND_COLOR = "#4F46E5";
@@ -216,7 +224,7 @@ public class EmailTemplateUtil {
 
 
     /**
-     * Builds the admin order notification email HTML content.
+     * Builds the admin order notification email HTML content with enhanced product details.
      * @param order the order details
      * @param user the customer who placed the order
      * @return HTML email content
@@ -227,13 +235,19 @@ public class EmailTemplateUtil {
         content.append("<h2 style=\"color: ").append(BRAND_COLOR).append("; margin-top: 0;\">🔔 New Order Received!</h2>");
         content.append("<p>A new paid order has been placed and requires processing.</p>");
         
-        // Customer Details Box
+        // Order Date and Time - Prominent Display
+        content.append("<div style=\"background-color: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 20px 0;\">");
+        content.append("<h4 style=\"margin-top: 0; color: #856404;\">📅 Order Date & Time</h4>");
+        content.append("<p style=\"margin: 0; color: #856404; font-size: 16px; font-weight: bold;\">").append(formatDate(order.getOrderDate())).append("</p>");
+        content.append("</div>");
+        
+        // Customer Information Section - Enhanced
         content.append("<div style=\"background-color: #d4edda; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745; margin: 20px 0;\">");
-        content.append("<h4 style=\"margin-top: 0; color: #155724;\">👤 Customer Details</h4>");
+        content.append("<h4 style=\"margin-top: 0; color: #155724;\">👤 Customer Information</h4>");
         content.append("<table style=\"width: 100%;\">");
-        content.append("<tr><td style=\"padding: 4px 0;\"><strong>Name:</strong></td><td>").append(safeGet(user.getFullName(), "N/A")).append("</td></tr>");
+        content.append("<tr><td style=\"padding: 4px 0;\"><strong>Full Name:</strong></td><td>").append(safeGet(user.getFullName(), "N/A")).append("</td></tr>");
         content.append("<tr><td style=\"padding: 4px 0;\"><strong>Email:</strong></td><td>").append(safeGet(user.getEmail(), "N/A")).append("</td></tr>");
-        content.append("<tr><td style=\"padding: 4px 0;\"><strong>Phone:</strong></td><td>").append(safeGet(user.getPhone(), "N/A")).append("</td></tr>");
+        content.append("<tr><td style=\"padding: 4px 0;\"><strong>Phone Number:</strong></td><td>").append(safeGet(user.getPhone(), "N/A")).append("</td></tr>");
         content.append("<tr><td style=\"padding: 4px 0;\"><strong>User ID:</strong></td><td>").append(safeGet(user.getId(), "N/A")).append("</td></tr>");
         content.append("</table>");
         content.append("</div>");
@@ -244,52 +258,59 @@ public class EmailTemplateUtil {
         content.append("<table style=\"width: 100%; border-collapse: collapse;\">");
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Order ID:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(safeGet(order.getId(), "N/A")).append("</td></tr>");
-        content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Order Date:</strong></td>");
-        content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(formatDate(order.getOrderDate())).append("</td></tr>");
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Status:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(order.getStatus() != null ? order.getStatus().name().toUpperCase() : "PENDING").append("</td></tr>");
-        content.append("<tr><td style=\"padding: 8px 0;\"><strong>Total Amount:</strong></td>");
-        content.append("<td style=\"padding: 8px 0; text-align: right; font-size: 18px; color: #28a745;\"><strong>").append(formatCurrency(order.getTotalAmount())).append("</strong></td></tr>");
         content.append("</table>");
         content.append("</div>");
         
-        // Items Table
-        content.append("<h3 style=\"color: ").append(BRAND_COLOR).append(";\">Items Ordered</h3>");
-        content.append("<table style=\"width: 100%; border-collapse: collapse; margin-bottom: 20px;\">");
-        content.append("<tr style=\"background-color: ").append(BRAND_COLOR).append("; color: white;\">");
-        content.append("<th style=\"padding: 12px; text-align: left;\">#</th>");
-        content.append("<th style=\"padding: 12px; text-align: left;\">Product ID</th>");
-        content.append("<th style=\"padding: 12px; text-align: center;\">Qty</th>");
-        content.append("<th style=\"padding: 12px; text-align: right;\">Price</th>");
-        content.append("<th style=\"padding: 12px; text-align: right;\">Total</th>");
-        content.append("</tr>");
+        // Enhanced Product Details Section
+        content.append("<h3 style=\"color: ").append(BRAND_COLOR).append(";\">📦 Product Details</h3>");
         
+        double subtotal = 0;
         if (order.getItems() != null) {
             int index = 1;
             for (Order.OrderItem item : order.getItems()) {
                 double itemTotal = item.getQuantity() * item.getPrice();
-                String bgColor = index % 2 == 0 ? "#f8f9fa" : "#ffffff";
-                content.append("<tr style=\"background-color: ").append(bgColor).append(";\">");
-                content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6;\">").append(index).append("</td>");
-                content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6;\">").append(safeGet(item.getProductId(), "N/A")).append("</td>");
-                content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6; text-align: center;\">").append(item.getQuantity()).append("</td>");
-                content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(formatCurrency(item.getPrice())).append("</td>");
-                content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(formatCurrency(itemTotal)).append("</td>");
-                content.append("</tr>");
+                subtotal += itemTotal;
+                
+                // Fetch product details from database
+                Product product = productRepository.findById(item.getProductId()).orElse(null);
+                
+                content.append(buildProductDetailCard(product, item, index));
                 index++;
             }
         }
-        content.append("</table>");
         
-        // Shipping Address
+        // Order Summary Section
+        content.append("<div style=\"background-color: #e9ecef; padding: 20px; border-radius: 8px; margin: 20px 0;\">");
+        content.append("<h3 style=\"margin-top: 0; color: ").append(BRAND_COLOR).append(";\">💰 Order Summary</h3>");
+        content.append("<table style=\"width: 100%; border-collapse: collapse;\">");
+        content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Subtotal:</strong></td>");
+        content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(formatCurrency(subtotal)).append("</td></tr>");
+        
+        // Tax calculation (if applicable)
+        double tax = order.getTotalAmount() - subtotal;
+        if (Math.abs(tax) > 0.01) { // Only show if tax is non-zero
+            content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Tax:</strong></td>");
+            content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(formatCurrency(tax)).append("</td></tr>");
+        }
+        
+        content.append("<tr><td style=\"padding: 12px 0; font-size: 18px;\"><strong>Grand Total:</strong></td>");
+        content.append("<td style=\"padding: 12px 0; text-align: right; font-size: 20px; color: #28a745; font-weight: bold;\">").append(formatCurrency(order.getTotalAmount())).append("</td></tr>");
+        content.append("</table>");
+        content.append("</div>");
+        
+        // Complete Delivery Address Section
         if (order.getAddress() != null) {
             Order.Address address = order.getAddress();
             content.append("<div style=\"background-color: #cce5ff; padding: 15px; border-radius: 8px; border-left: 4px solid #004085; margin: 20px 0;\">");
-            content.append("<h4 style=\"margin-top: 0; color: #004085;\">📦 Shipping Address</h4>");
-            content.append("<p style=\"margin: 0; color: #004085;\">");
-            content.append(safeGet(address.getAddressLine(), "")).append("<br>");
-            content.append(safeGet(address.getCity(), "")).append(", ").append(safeGet(address.getState(), "")).append("<br>");
-            content.append(safeGet(address.getPostalCode(), "")).append(", ").append(safeGet(address.getCountry(), "India"));
+            content.append("<h4 style=\"margin-top: 0; color: #004085;\">📦 Complete Delivery Address</h4>");
+            content.append("<p style=\"margin: 0; color: #004085; line-height: 1.6;\">");
+            content.append("<strong>Address:</strong> ").append(safeGet(address.getAddressLine(), "N/A")).append("<br>");
+            content.append("<strong>City:</strong> ").append(safeGet(address.getCity(), "N/A")).append("<br>");
+            content.append("<strong>State:</strong> ").append(safeGet(address.getState(), "N/A")).append("<br>");
+            content.append("<strong>Postal Code:</strong> ").append(safeGet(address.getPostalCode(), "N/A")).append("<br>");
+            content.append("<strong>Country:</strong> ").append(safeGet(address.getCountry(), "India"));
             content.append("</p>");
             content.append("</div>");
         }
@@ -621,5 +642,94 @@ public class EmailTemplateUtil {
         content.append("<p style=\"font-size: 12px; color: #6c757d;\">P.S. You can manage your wishlist anytime by visiting our store.</p>");
         
         return buildBaseTemplate("Your Wishlist Awaits - " + BRAND_NAME, content.toString());
+    }
+
+    /**
+     * Builds a product detail card HTML for admin order notifications.
+     * This method encapsulates per-product HTML generation to avoid string concatenation in loops.
+     *
+     * @param product the product entity (may be null)
+     * @param item the order item
+     * @param index the item index for alternating row colors
+     * @return HTML string for the product detail card
+     */
+    private String buildProductDetailCard(Product product, Order.OrderItem item, int index) {
+        StringBuilder card = new StringBuilder();
+        double itemTotal = item.getQuantity() * item.getPrice();
+        
+        String bgColor = index % 2 == 0 ? "#f8f9fa" : "#ffffff";
+        card.append("<div style=\"background-color: ").append(bgColor)
+            .append("; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #dee2e6;\">");
+        
+        // Product Image (if available)
+        if (product != null && product.getImageUrls() != null && !product.getImageUrls().isEmpty()) {
+            String imageUrl = product.getImageUrls().get(0);
+            card.append("<div style=\"text-align: center; margin-bottom: 10px;\">")
+                .append("<img src=\"").append(imageUrl)
+                .append("\" alt=\"Product Image\" style=\"max-width: 200px; max-height: 200px; border-radius: 8px;\" />")
+                .append("</div>");
+        }
+        
+        // Product Name (bold and prominent)
+        if (product != null) {
+            card.append("<h4 style=\"margin: 10px 0; color: ").append(BRAND_COLOR)
+                .append(";\">").append(safeGet(product.getName(), "Product")).append("</h4>");
+        } else {
+            card.append("<h4 style=\"margin: 10px 0; color: #dc3545;\">Product ID: ")
+                .append(item.getProductId()).append("</h4>");
+            card.append("<p style=\"color: #856404; font-style: italic;\">⚠️ Note: Product details not found in database. Please check manually.</p>");
+        }
+        
+        // Product Details Table
+        card.append("<table style=\"width: 100%; margin-top: 10px;\">");
+        
+        // Product ID
+        card.append("<tr><td style=\"padding: 4px 0; width: 40%;\"><strong>Product ID:</strong></td><td>")
+            .append(item.getProductId()).append("</td></tr>");
+        
+        // Category Name (fetch from database)
+        if (product != null && product.getCategoryId() != null && !product.getCategoryId().isBlank()) {
+            Category category = categoryRepository.findById(product.getCategoryId()).orElse(null);
+            if (category != null && category.getName() != null && !category.getName().isBlank()) {
+                card.append("<tr><td style=\"padding: 4px 0;\"><strong>Category:</strong></td><td>")
+                    .append(category.getName()).append("</td></tr>");
+            }
+        }
+        
+        // Color Information
+        if (product != null && product.getColor() != null && !product.getColor().isBlank()) {
+            card.append("<tr><td style=\"padding: 4px 0;\"><strong>Color:</strong></td><td>")
+                .append(product.getColor()).append("</td></tr>");
+        }
+        
+        // Stock Quantity
+        if (product != null) {
+            String stockStatus = product.getStockQuantity() > 0 
+                ? product.getStockQuantity() + " units" 
+                : "Out of Stock";
+            String stockColor = product.getStockQuantity() > 0 ? "#28a745" : "#dc3545";
+            card.append("<tr><td style=\"padding: 4px 0;\"><strong>Stock:</strong></td><td style=\"color: ")
+                .append(stockColor).append("; font-weight: bold;\">").append(stockStatus).append("</td></tr>");
+        }
+        
+        // Quantity and Price
+        card.append("<tr><td style=\"padding: 4px 0;\"><strong>Quantity:</strong></td><td>")
+            .append(item.getQuantity()).append("</td></tr>");
+        card.append("<tr><td style=\"padding: 4px 0;\"><strong>Unit Price:</strong></td><td>")
+            .append(formatCurrency(item.getPrice())).append("</td></tr>");
+        card.append("<tr><td style=\"padding: 4px 0;\"><strong>Line Total:</strong></td><td style=\"font-size: 16px; color: #28a745; font-weight: bold;\">")
+            .append(formatCurrency(itemTotal)).append("</td></tr>");
+        card.append("</table>");
+        
+        // Product Description (if available)
+        if (product != null && product.getDescription() != null && !product.getDescription().isBlank()) {
+            card.append("<div style=\"margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 4px;\">")
+                .append("<strong style=\"color: ").append(BRAND_COLOR).append(";\">Description:</strong><br>")
+                .append("<span style=\"font-size: 14px; color: #6c757d;\">").append(product.getDescription()).append("</span>")
+                .append("</div>");
+        }
+        
+        card.append("</div>");
+        return card.toString();
     }
 }
