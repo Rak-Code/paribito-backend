@@ -4,9 +4,13 @@ import com.ecommerce.project.dto.AuthResponseDTO;
 import com.ecommerce.project.dto.UserLoginDTO;
 import com.ecommerce.project.dto.UserRegisterDTO;
 import com.ecommerce.project.dto.UserResponseDTO;
+import com.ecommerce.project.dto.ForgotPasswordRequestDTO;
+import com.ecommerce.project.dto.VerifyOtpRequestDTO;
+import com.ecommerce.project.dto.ResetPasswordRequestDTO;
 import com.ecommerce.project.entity.User;
 import com.ecommerce.project.security.JwtUtil;
 import com.ecommerce.project.service.UserService;
+import com.ecommerce.project.service.PasswordResetService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +25,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -30,6 +35,7 @@ public class AuthController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     @Operation(
@@ -88,5 +94,69 @@ public class AuthController {
         );
         
         return ResponseEntity.ok(new AuthResponseDTO(token, userResponse));
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(
+        summary = "Initiate password reset",
+        description = "Sends an OTP to the user's email for password reset"
+    )
+    @ApiResponse(responseCode = "200", description = "OTP sent successfully",
+        content = @Content)
+    @ApiResponse(responseCode = "400", description = "Invalid email format",
+        content = @Content)
+    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO request) {
+        boolean success = passwordResetService.initiatePasswordReset(request.getEmail());
+        if (success) {
+            return ResponseEntity.ok(Map.of("message", "OTP sent to your email if account exists"));
+        } else {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to send OTP"));
+        }
+    }
+
+    @PostMapping("/verify-otp")
+    @Operation(
+        summary = "Verify OTP code",
+        description = "Verifies the OTP code for password reset"
+    )
+    @ApiResponse(responseCode = "200", description = "OTP verified successfully",
+        content = @Content)
+    @ApiResponse(responseCode = "400", description = "Invalid or expired OTP",
+        content = @Content)
+    public ResponseEntity<Map<String, String>> verifyOtp(@Valid @RequestBody VerifyOtpRequestDTO request) {
+        boolean isValid = passwordResetService.verifyOtp(request.getEmail(), request.getOtpCode());
+        if (isValid) {
+            return ResponseEntity.ok(Map.of("message", "OTP verified successfully"));
+        } else {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid or expired OTP"));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(
+        summary = "Reset password",
+        description = "Resets the user's password after OTP verification"
+    )
+    @ApiResponse(responseCode = "200", description = "Password reset successfully",
+        content = @Content)
+    @ApiResponse(responseCode = "400", description = "Invalid OTP or password mismatch",
+        content = @Content)
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequestDTO request) {
+        // Validate password match
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Passwords do not match"));
+        }
+
+        boolean success = passwordResetService.resetPassword(
+            request.getEmail(), 
+            request.getOtpCode(), 
+            request.getNewPassword()
+        );
+        
+        if (success) {
+            return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
+        } else {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid OTP or password reset failed"));
+        }
     }
 }

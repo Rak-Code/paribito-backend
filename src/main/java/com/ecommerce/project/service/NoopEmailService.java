@@ -68,4 +68,10 @@ public class NoopEmailService implements EmailService {
     public void sendInvoiceToAdmin(Invoice invoice, User user, byte[] pdfData) {
         log.warn("EmailService not configured. Skipping invoice email to admin for invoice: {}", invoice != null ? invoice.getInvoiceNumber() : null);
     }
+
+    @Override
+    @Async("emailExecutor")
+    public void sendOtpEmail(String toEmail, String otpCode) {
+        log.warn("EmailService not configured. Skipping OTP email to: {}", toEmail);
+    }
 }

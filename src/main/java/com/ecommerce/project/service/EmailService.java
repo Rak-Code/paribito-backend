@@ -55,4 +55,15 @@ public interface EmailService {
     void sendInvoiceToCustomer(Invoice invoice, User user, byte[] pdfData);
     
     void sendInvoiceToAdmin(Invoice invoice, User user, byte[] pdfData);
+    
+    // Password Reset Emails
+    
+    /**
+     * Sends an OTP email for password reset.
+     * Should be called when user requests password reset.
+     * 
+     * @param toEmail the email address to send OTP to
+     * @param otpCode the 6-digit OTP code
+     */
+    void sendOtpEmail(String toEmail, String otpCode);
 }

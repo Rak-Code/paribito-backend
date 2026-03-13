@@ -367,4 +367,69 @@ public class EmailServiceImpl implements EmailService {
             log.error("Failed to send invoice email to admin - {}", LogSanitizer.sanitizeException(e));
         }
     }
+
+    @Override
+    @Async("emailExecutor")
+    public void sendOtpEmail(String toEmail, String otpCode) {
+        try {
+            String htmlContent = buildOtpEmailHtml(otpCode);
+            String subject = "Password Reset OTP - Paribito";
+            
+            if (sendHtmlEmail(toEmail, subject, htmlContent)) {
+                log.info("OTP email sent successfully to: {}", toEmail);
+            } else {
+                log.warn("Failed to send OTP email to: {}", toEmail);
+            }
+        } catch (Exception e) {
+            // Sanitize exception to prevent sensitive data exposure (Requirements 10.3)
+            log.error("Failed to send OTP email to: {} - {}", toEmail, LogSanitizer.sanitizeException(e));
+        }
+    }
+
+    private String buildOtpEmailHtml(String otpCode) {
+        return """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Password Reset OTP</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { text-align: center; margin-bottom: 30px; }
+                        .otp-box { background-color: #f8f9fa; border: 2px dashed #007bff; padding: 20px; text-align: center; margin: 20px 0; }
+                        .otp-code { font-size: 32px; font-weight: bold; color: #007bff; letter-spacing: 5px; }
+                        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
+                        .warning { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 20px 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Paribito - Password Reset</h1>
+                        </div>
+                        
+                        <p>Hello,</p>
+                        
+                        <p>You have requested to reset your password for your Paribito account. Use the OTP code below to proceed:</p>
+                        
+                        <div class="otp-box">
+                            <div class="otp-code">%s</div>
+                        </div>
+                        
+                        <div class="warning">
+                            <strong>Important:</strong> This OTP will expire in 10 minutes for security reasons. Please use it immediately.
+                        </div>
+                        
+                        <p>If you didn't request this password reset, please ignore this email or contact our support team.</p>
+                        
+                        <div class="footer">
+                            <p>This is an automated message from Paribito. Please do not reply to this email.</p>
+                            <p>&copy; 2024 Paribito. All rights reserved.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """.formatted(otpCode);
+    }
 }
