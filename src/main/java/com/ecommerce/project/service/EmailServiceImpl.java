@@ -31,7 +31,7 @@ import java.util.List;
  * to ensure email failures do not affect core business operations.
  */
 @Service
-@ConditionalOnProperty(name = "email.provider", havingValue = "smtp", matchIfMissing = true)
+@ConditionalOnProperty(name = "email.provider", havingValue = "smtp-disabled", matchIfMissing = false)
 @RequiredArgsConstructor
 @Slf4j
 public class EmailServiceImpl implements EmailService {
