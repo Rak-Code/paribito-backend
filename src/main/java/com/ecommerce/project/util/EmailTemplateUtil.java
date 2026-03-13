@@ -345,31 +345,29 @@ public class EmailTemplateUtil {
             
             // Build address with proper formatting
             StringBuilder addressText = new StringBuilder();
-            addressText.append("<strong>Address:</strong> ");
             if (address.getAddressLine() != null && !address.getAddressLine().isBlank()) {
                 addressText.append(address.getAddressLine()).append("<br>");
             }
             
-            addressText.append("<strong>City:</strong> ");
+            // City and State
             if (address.getCity() != null && !address.getCity().isBlank()) {
-                addressText.append(address.getCity()).append("<br>");
-            }
-            
-            addressText.append("<strong>State:</strong> ");
-            if (address.getState() != null && !address.getState().isBlank()) {
+                if (address.getState() != null && !address.getState().isBlank()) {
+                    addressText.append(address.getCity()).append(", ").append(address.getState()).append("<br>");
+                } else {
+                    addressText.append(address.getCity()).append("<br>");
+                }
+            } else if (address.getState() != null && !address.getState().isBlank()) {
                 addressText.append(address.getState()).append("<br>");
             }
             
-            addressText.append("<strong>Postal Code:</strong> ");
+            // Postal Code
             if (address.getPostalCode() != null && !address.getPostalCode().isBlank()) {
-                addressText.append(address.getPostalCode()).append("<br>");
-            }
-            
-            addressText.append("<strong>Country:</strong> ");
-            if (address.getCountry() != null && !address.getCountry().isBlank()) {
+                addressText.append(address.getPostalCode());
+                if (address.getCountry() != null && !address.getCountry().isBlank()) {
+                    addressText.append(", ").append(address.getCountry());
+                }
+            } else if (address.getCountry() != null && !address.getCountry().isBlank()) {
                 addressText.append(address.getCountry());
-            } else {
-                addressText.append("India");
             }
             
             content.append(addressText.toString());
@@ -769,6 +767,12 @@ public class EmailTemplateUtil {
         // Product ID
         card.append("<tr><td style=\"padding: 4px 0; width: 40%;\"><strong>Product ID:</strong></td><td>")
             .append(item.getProductId()).append("</td></tr>");
+        
+        // Product Name (if available)
+        if (product != null && product.getName() != null && !product.getName().isBlank()) {
+            card.append("<tr><td style=\"padding: 4px 0;\"><strong>Product Name:</strong></td><td>")
+                .append(product.getName()).append("</td></tr>");
+        }
         
         // Category Name (fetch from database)
         if (product != null && product.getCategoryId() != null && !product.getCategoryId().isBlank()) {
