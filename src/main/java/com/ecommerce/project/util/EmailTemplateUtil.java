@@ -25,8 +25,7 @@ public class EmailTemplateUtil {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
 
-    private static final String BRAND_NAME = "Adita Enterprise India";
-    private static final String BRAND_COLOR = "#4F46E5";
+    private static final String BRAND_NAME = "THE PARIBITO";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 
     /**
@@ -77,8 +76,8 @@ public class EmailTemplateUtil {
         
         // Header
         html.append("<tr>");
-        html.append("<td style=\"background-color: ").append(BRAND_COLOR).append("; padding: 20px; text-align: center;\">");
-        html.append("<h1 style=\"color: #ffffff; margin: 0; font-size: 24px;\">").append(BRAND_NAME).append("</h1>");
+        html.append("<td style=\"background-color: #000000; padding: 20px; text-align: center;\">");
+        html.append("<h1 style=\"color: #ffffff; margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 2px;\">").append(BRAND_NAME).append("</h1>");
         html.append("</td>");
         html.append("</tr>");
         
@@ -91,9 +90,10 @@ public class EmailTemplateUtil {
         
         // Footer
         html.append("<tr>");
-        html.append("<td style=\"background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #6c757d;\">");
+        html.append("<td style=\"background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666666; border-top: 1px solid #dee2e6;\">");
         html.append("<p style=\"margin: 0;\">&copy; 2024 ").append(BRAND_NAME).append(". All rights reserved.</p>");
         html.append("<p style=\"margin: 5px 0 0 0;\">Thank you for shopping with us!</p>");
+        html.append("<p style=\"margin: 5px 0 0 0; font-size: 10px; color: #999999;\">Managed by aivro.in</p>");
         html.append("</td>");
         html.append("</tr>");
         
@@ -115,13 +115,13 @@ public class EmailTemplateUtil {
     public String buildPaymentSuccessEmail(Payment payment, Order order, User user) {
         StringBuilder content = new StringBuilder();
         
-        content.append("<h2 style=\"color: #28a745; margin-top: 0;\">Payment Successful! ✓</h2>");
+        content.append("<h2 style=\"color: #000000; margin-top: 0; font-size: 24px; font-weight: bold;\">Payment Successful! ✓</h2>");
         content.append("<p>Dear ").append(safeGet(user.getFullName(), "Customer")).append(",</p>");
         content.append("<p>Your payment has been successfully processed. Thank you for your purchase!</p>");
         
         // Payment Details Box
-        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;\">");
-        content.append("<h3 style=\"margin-top: 0; color: ").append(BRAND_COLOR).append(";\">Payment Details</h3>");
+        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #dee2e6;\">");
+        content.append("<h3 style=\"margin-top: 0; color: #000000; font-size: 18px; font-weight: bold;\">Payment Details</h3>");
         content.append("<table style=\"width: 100%; border-collapse: collapse;\">");
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Transaction ID:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(safeGet(payment.getRazorpayPaymentId(), payment.getTransactionId())).append("</td></tr>");
@@ -130,7 +130,7 @@ public class EmailTemplateUtil {
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Payment Date:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(formatDate(payment.getPaymentDate())).append("</td></tr>");
         content.append("<tr><td style=\"padding: 8px 0;\"><strong>Amount Paid:</strong></td>");
-        content.append("<td style=\"padding: 8px 0; text-align: right; font-size: 18px; color: #28a745;\"><strong>").append(formatCurrency(payment.getAmount())).append("</strong></td></tr>");
+        content.append("<td style=\"padding: 8px 0; text-align: right; font-size: 18px; color: #000000; font-weight: bold;\">").append(formatCurrency(payment.getAmount())).append("</td></tr>");
         content.append("</table>");
         content.append("</div>");
         
@@ -150,13 +150,13 @@ public class EmailTemplateUtil {
     public String buildOrderConfirmationEmail(Order order, User user) {
         StringBuilder content = new StringBuilder();
         
-        content.append("<h2 style=\"color: ").append(BRAND_COLOR).append("; margin-top: 0;\">Order Confirmed!</h2>");
+        content.append("<h2 style=\"color: #000000; margin-top: 0; font-size: 24px; font-weight: bold;\">Order Confirmed!</h2>");
         content.append("<p>Dear ").append(safeGet(user.getFullName(), "Customer")).append(",</p>");
         content.append("<p>Thank you for your order! We have received your order and it is being processed.</p>");
         
         // Order Summary Box
-        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;\">");
-        content.append("<h3 style=\"margin-top: 0; color: ").append(BRAND_COLOR).append(";\">Order Summary</h3>");
+        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #dee2e6;\">");
+        content.append("<h3 style=\"margin-top: 0; color: #000000; font-size: 18px; font-weight: bold;\">Order Summary</h3>");
         content.append("<table style=\"width: 100%; border-collapse: collapse;\">");
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Order ID:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(safeGet(order.getId(), "N/A")).append("</td></tr>");
@@ -168,29 +168,39 @@ public class EmailTemplateUtil {
         content.append("</div>");
         
         // Items Table
-        content.append("<h3 style=\"color: ").append(BRAND_COLOR).append(";\">Items Ordered</h3>");
+        content.append("<h3 style=\"color: #000000; font-size: 18px; font-weight: bold;\">Items Ordered</h3>");
         content.append("<table style=\"width: 100%; border-collapse: collapse; margin-bottom: 20px;\">");
-        content.append("<tr style=\"background-color: ").append(BRAND_COLOR).append("; color: white;\">");
+        content.append("<tr style=\"background-color: #000000; color: white;\">");
         content.append("<th style=\"padding: 12px; text-align: left;\">#</th>");
-        content.append("<th style=\"padding: 12px; text-align: left;\">Product ID</th>");
+        content.append("<th style=\"padding: 12px; text-align: left;\">Product Name</th>");
         content.append("<th style=\"padding: 12px; text-align: center;\">Qty</th>");
         content.append("<th style=\"padding: 12px; text-align: right;\">Price</th>");
         content.append("<th style=\"padding: 12px; text-align: right;\">Total</th>");
         content.append("</tr>");
         
-        double calculatedTotal = 0;
         if (order.getItems() != null) {
             int index = 1;
             for (Order.OrderItem item : order.getItems()) {
                 double itemTotal = item.getQuantity() * item.getPrice();
-                calculatedTotal += itemTotal;
                 String bgColor = index % 2 == 0 ? "#f8f9fa" : "#ffffff";
+                
+                // Fetch product name
+                String productName = "Product " + item.getProductId();
+                try {
+                    Product product = productRepository.findById(item.getProductId()).orElse(null);
+                    if (product != null && product.getName() != null && !product.getName().isBlank()) {
+                        productName = product.getName();
+                    }
+                } catch (Exception e) {
+                    // Keep default product name if fetch fails
+                }
+                
                 content.append("<tr style=\"background-color: ").append(bgColor).append(";\">");
                 content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6;\">").append(index).append("</td>");
-                content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6;\">").append(safeGet(item.getProductId(), "N/A")).append("</td>");
+                content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6; font-weight: 500;\">").append(productName).append("</td>");
                 content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6; text-align: center;\">").append(item.getQuantity()).append("</td>");
                 content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(formatCurrency(item.getPrice())).append("</td>");
-                content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(formatCurrency(itemTotal)).append("</td>");
+                content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;\">").append(formatCurrency(itemTotal)).append("</td>");
                 content.append("</tr>");
                 index++;
             }
@@ -199,19 +209,45 @@ public class EmailTemplateUtil {
         // Total Row
         content.append("<tr style=\"background-color: #e9ecef; font-weight: bold;\">");
         content.append("<td colspan=\"4\" style=\"padding: 12px; text-align: right;\">Order Total:</td>");
-        content.append("<td style=\"padding: 12px; text-align: right; font-size: 18px; color: ").append(BRAND_COLOR).append(";\">").append(formatCurrency(order.getTotalAmount())).append("</td>");
+        content.append("<td style=\"padding: 12px; text-align: right; font-size: 18px; color: #000000; font-weight: bold;\">").append(formatCurrency(order.getTotalAmount())).append("</td>");
         content.append("</tr>");
         content.append("</table>");
         
         // Shipping Address
         if (order.getAddress() != null) {
             Order.Address address = order.getAddress();
-            content.append("<div style=\"background-color: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 20px 0;\">");
-            content.append("<h4 style=\"margin-top: 0; color: #856404;\">📦 Shipping Address</h4>");
-            content.append("<p style=\"margin: 0; color: #856404;\">");
-            content.append(safeGet(address.getAddressLine(), "")).append("<br>");
-            content.append(safeGet(address.getCity(), "")).append(", ").append(safeGet(address.getState(), "")).append("<br>");
-            content.append(safeGet(address.getPostalCode(), "")).append(", ").append(safeGet(address.getCountry(), "India"));
+            content.append("<div style=\"background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin: 20px 0;\">");
+            content.append("<h4 style=\"margin-top: 0; color: #000000; font-size: 16px; font-weight: bold;\">📦 Shipping Address</h4>");
+            content.append("<p style=\"margin: 0; line-height: 1.6; color: #333333;\">");
+            
+            // Build address with proper formatting
+            StringBuilder addressText = new StringBuilder();
+            if (address.getAddressLine() != null && !address.getAddressLine().isBlank()) {
+                addressText.append(address.getAddressLine()).append("<br>");
+            }
+            
+            // City and State
+            if (address.getCity() != null && !address.getCity().isBlank()) {
+                if (address.getState() != null && !address.getState().isBlank()) {
+                    addressText.append(address.getCity()).append(", ").append(address.getState()).append("<br>");
+                } else {
+                    addressText.append(address.getCity()).append("<br>");
+                }
+            } else if (address.getState() != null && !address.getState().isBlank()) {
+                addressText.append(address.getState()).append("<br>");
+            }
+            
+            // Postal Code
+            if (address.getPostalCode() != null && !address.getPostalCode().isBlank()) {
+                addressText.append(address.getPostalCode());
+                if (address.getCountry() != null && !address.getCountry().isBlank()) {
+                    addressText.append(", ").append(address.getCountry());
+                }
+            } else if (address.getCountry() != null && !address.getCountry().isBlank()) {
+                addressText.append(address.getCountry());
+            }
+            
+            content.append(addressText.toString());
             content.append("</p>");
             content.append("</div>");
         }
@@ -232,18 +268,18 @@ public class EmailTemplateUtil {
     public String buildAdminOrderNotificationEmail(Order order, User user) {
         StringBuilder content = new StringBuilder();
         
-        content.append("<h2 style=\"color: ").append(BRAND_COLOR).append("; margin-top: 0;\">🔔 New Order Received!</h2>");
+        content.append("<h2 style=\"color: #000000; margin-top: 0; font-size: 24px; font-weight: bold;\">🔔 New Order Received!</h2>");
         content.append("<p>A new paid order has been placed and requires processing.</p>");
         
         // Order Date and Time - Prominent Display
-        content.append("<div style=\"background-color: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 20px 0;\">");
-        content.append("<h4 style=\"margin-top: 0; color: #856404;\">📅 Order Date & Time</h4>");
-        content.append("<p style=\"margin: 0; color: #856404; font-size: 16px; font-weight: bold;\">").append(formatDate(order.getOrderDate())).append("</p>");
+        content.append("<div style=\"background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin: 20px 0;\">");
+        content.append("<h4 style=\"margin-top: 0; color: #000000; font-size: 16px; font-weight: bold;\">📅 Order Date & Time</h4>");
+        content.append("<p style=\"margin: 0; color: #333333; font-size: 16px; font-weight: bold;\">").append(formatDate(order.getOrderDate())).append("</p>");
         content.append("</div>");
         
         // Customer Information Section - Enhanced
-        content.append("<div style=\"background-color: #d4edda; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745; margin: 20px 0;\">");
-        content.append("<h4 style=\"margin-top: 0; color: #155724;\">👤 Customer Information</h4>");
+        content.append("<div style=\"background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin: 20px 0;\">");
+        content.append("<h4 style=\"margin-top: 0; color: #000000; font-size: 16px; font-weight: bold;\">👤 Customer Information</h4>");
         content.append("<table style=\"width: 100%;\">");
         content.append("<tr><td style=\"padding: 4px 0;\"><strong>Full Name:</strong></td><td>").append(safeGet(user.getFullName(), "N/A")).append("</td></tr>");
         content.append("<tr><td style=\"padding: 4px 0;\"><strong>Email:</strong></td><td>").append(safeGet(user.getEmail(), "N/A")).append("</td></tr>");
@@ -253,8 +289,8 @@ public class EmailTemplateUtil {
         content.append("</div>");
         
         // Order Details Box
-        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;\">");
-        content.append("<h3 style=\"margin-top: 0; color: ").append(BRAND_COLOR).append(";\">Order Details</h3>");
+        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #dee2e6;\">");
+        content.append("<h3 style=\"margin-top: 0; color: #000000; font-size: 18px; font-weight: bold;\">Order Details</h3>");
         content.append("<table style=\"width: 100%; border-collapse: collapse;\">");
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Order ID:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(safeGet(order.getId(), "N/A")).append("</td></tr>");
@@ -264,7 +300,7 @@ public class EmailTemplateUtil {
         content.append("</div>");
         
         // Enhanced Product Details Section
-        content.append("<h3 style=\"color: ").append(BRAND_COLOR).append(";\">📦 Product Details</h3>");
+        content.append("<h3 style=\"color: #000000; font-size: 18px; font-weight: bold;\">📦 Product Details</h3>");
         
         double subtotal = 0;
         if (order.getItems() != null) {
@@ -283,7 +319,7 @@ public class EmailTemplateUtil {
         
         // Order Summary Section
         content.append("<div style=\"background-color: #e9ecef; padding: 20px; border-radius: 8px; margin: 20px 0;\">");
-        content.append("<h3 style=\"margin-top: 0; color: ").append(BRAND_COLOR).append(";\">💰 Order Summary</h3>");
+        content.append("<h3 style=\"margin-top: 0; color: #000000; font-size: 18px; font-weight: bold;\">💰 Order Summary</h3>");
         content.append("<table style=\"width: 100%; border-collapse: collapse;\">");
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Subtotal:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(formatCurrency(subtotal)).append("</td></tr>");
@@ -296,26 +332,52 @@ public class EmailTemplateUtil {
         }
         
         content.append("<tr><td style=\"padding: 12px 0; font-size: 18px;\"><strong>Grand Total:</strong></td>");
-        content.append("<td style=\"padding: 12px 0; text-align: right; font-size: 20px; color: #28a745; font-weight: bold;\">").append(formatCurrency(order.getTotalAmount())).append("</td></tr>");
+        content.append("<td style=\"padding: 12px 0; text-align: right; font-size: 20px; color: #000000; font-weight: bold;\">").append(formatCurrency(order.getTotalAmount())).append("</td></tr>");
         content.append("</table>");
         content.append("</div>");
         
         // Complete Delivery Address Section
         if (order.getAddress() != null) {
             Order.Address address = order.getAddress();
-            content.append("<div style=\"background-color: #cce5ff; padding: 15px; border-radius: 8px; border-left: 4px solid #004085; margin: 20px 0;\">");
-            content.append("<h4 style=\"margin-top: 0; color: #004085;\">📦 Complete Delivery Address</h4>");
-            content.append("<p style=\"margin: 0; color: #004085; line-height: 1.6;\">");
-            content.append("<strong>Address:</strong> ").append(safeGet(address.getAddressLine(), "N/A")).append("<br>");
-            content.append("<strong>City:</strong> ").append(safeGet(address.getCity(), "N/A")).append("<br>");
-            content.append("<strong>State:</strong> ").append(safeGet(address.getState(), "N/A")).append("<br>");
-            content.append("<strong>Postal Code:</strong> ").append(safeGet(address.getPostalCode(), "N/A")).append("<br>");
-            content.append("<strong>Country:</strong> ").append(safeGet(address.getCountry(), "India"));
+            content.append("<div style=\"background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin: 20px 0;\">");
+            content.append("<h4 style=\"margin-top: 0; color: #000000; font-size: 16px; font-weight: bold;\">📦 Complete Delivery Address</h4>");
+            content.append("<p style=\"margin: 0; color: #333333; line-height: 1.6;\">");
+            
+            // Build address with proper formatting
+            StringBuilder addressText = new StringBuilder();
+            addressText.append("<strong>Address:</strong> ");
+            if (address.getAddressLine() != null && !address.getAddressLine().isBlank()) {
+                addressText.append(address.getAddressLine()).append("<br>");
+            }
+            
+            addressText.append("<strong>City:</strong> ");
+            if (address.getCity() != null && !address.getCity().isBlank()) {
+                addressText.append(address.getCity()).append("<br>");
+            }
+            
+            addressText.append("<strong>State:</strong> ");
+            if (address.getState() != null && !address.getState().isBlank()) {
+                addressText.append(address.getState()).append("<br>");
+            }
+            
+            addressText.append("<strong>Postal Code:</strong> ");
+            if (address.getPostalCode() != null && !address.getPostalCode().isBlank()) {
+                addressText.append(address.getPostalCode()).append("<br>");
+            }
+            
+            addressText.append("<strong>Country:</strong> ");
+            if (address.getCountry() != null && !address.getCountry().isBlank()) {
+                addressText.append(address.getCountry());
+            } else {
+                addressText.append("India");
+            }
+            
+            content.append(addressText.toString());
             content.append("</p>");
             content.append("</div>");
         }
         
-        content.append("<p style=\"background-color: #fff3cd; padding: 15px; border-radius: 8px; color: #856404;\"><strong>⚠️ Action Required:</strong> Please process this order promptly.</p>");
+        content.append("<p style=\"background-color: #f8f9fa; padding: 15px; border-radius: 8px; color: #333333; border: 1px solid #dee2e6;\"><strong>⚠️ Action Required:</strong> Please process this order promptly.</p>");
         content.append("<p style=\"margin-top: 20px; font-size: 12px; color: #6c757d;\">---<br>Automated notification from ").append(BRAND_NAME).append(" System</p>");
         
         return buildBaseTemplate("New Order - " + BRAND_NAME, content.toString());
@@ -330,13 +392,13 @@ public class EmailTemplateUtil {
     public String buildOrderCancellationEmail(Order order, User user) {
         StringBuilder content = new StringBuilder();
         
-        content.append("<h2 style=\"color: #dc3545; margin-top: 0;\">Order Cancelled</h2>");
+        content.append("<h2 style=\"color: #000000; margin-top: 0; font-size: 24px; font-weight: bold;\">Order Cancelled</h2>");
         content.append("<p>Dear ").append(safeGet(user.getFullName(), "Customer")).append(",</p>");
         content.append("<p>We're sorry to inform you that your order has been cancelled.</p>");
         
         // Order Details Box
-        content.append("<div style=\"background-color: #f8d7da; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545; margin: 20px 0;\">");
-        content.append("<h3 style=\"margin-top: 0; color: #721c24;\">Cancelled Order Details</h3>");
+        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6; margin: 20px 0;\">");
+        content.append("<h3 style=\"margin-top: 0; color: #000000; font-size: 18px; font-weight: bold;\">Cancelled Order Details</h3>");
         content.append("<table style=\"width: 100%; border-collapse: collapse;\">");
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #f5c6cb;\"><strong>Order ID:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #f5c6cb; text-align: right;\">").append(safeGet(order.getId(), "N/A")).append("</td></tr>");
@@ -344,24 +406,35 @@ public class EmailTemplateUtil {
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #f5c6cb; text-align: right;\">").append(formatDate(order.getOrderDate())).append("</td></tr>");
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #f5c6cb;\"><strong>Cancellation Date:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #f5c6cb; text-align: right;\">").append(formatDate(LocalDateTime.now())).append("</td></tr>");
-        content.append("<tr><td style=\"padding: 8px 0;\"><strong>Order Total:</strong></td>");
-        content.append("<td style=\"padding: 8px 0; text-align: right;\">").append(formatCurrency(order.getTotalAmount())).append("</td></tr>");
+        content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #f5c6cb;\"><strong>Order Total:</strong></td>");
+        content.append("<td style=\"padding: 8px 0; text-align: right; font-size: 18px; color: #000000; font-weight: bold;\">").append(formatCurrency(order.getTotalAmount())).append("</td></tr>");
         content.append("</table>");
         content.append("</div>");
         
         // Items that were in the order
-        content.append("<h3 style=\"color: #6c757d;\">Items in Cancelled Order</h3>");
+        content.append("<h3 style=\"color: #000000; font-size: 18px; font-weight: bold;\">Items in Cancelled Order</h3>");
         content.append("<table style=\"width: 100%; border-collapse: collapse; margin-bottom: 20px;\">");
-        content.append("<tr style=\"background-color: #6c757d; color: white;\">");
-        content.append("<th style=\"padding: 12px; text-align: left;\">Product ID</th>");
+        content.append("<tr style=\"background-color: #000000; color: white;\">");
+        content.append("<th style=\"padding: 12px; text-align: left;\">Product Name</th>");
         content.append("<th style=\"padding: 12px; text-align: center;\">Qty</th>");
         content.append("<th style=\"padding: 12px; text-align: right;\">Price</th>");
         content.append("</tr>");
         
         if (order.getItems() != null) {
             for (Order.OrderItem item : order.getItems()) {
+                // Fetch product name
+                String productName = "Product " + item.getProductId();
+                try {
+                    Product product = productRepository.findById(item.getProductId()).orElse(null);
+                    if (product != null && product.getName() != null && !product.getName().isBlank()) {
+                        productName = product.getName();
+                    }
+                } catch (Exception e) {
+                    // Keep default product name if fetch fails
+                }
+                
                 content.append("<tr style=\"background-color: #f8f9fa;\">");
-                content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6;\">").append(safeGet(item.getProductId(), "N/A")).append("</td>");
+                content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6; font-weight: 500;\">").append(productName).append("</td>");
                 content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6; text-align: center;\">").append(item.getQuantity()).append("</td>");
                 content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(formatCurrency(item.getPrice())).append("</td>");
                 content.append("</tr>");
@@ -386,12 +459,12 @@ public class EmailTemplateUtil {
     public String buildAdminCancellationEmail(Order order, User user) {
         StringBuilder content = new StringBuilder();
         
-        content.append("<h2 style=\"color: #dc3545; margin-top: 0;\">⚠️ Order Cancellation Notice</h2>");
+        content.append("<h2 style=\"color: #000000; margin-top: 0; font-size: 24px; font-weight: bold;\">⚠️ Order Cancellation Notice</h2>");
         content.append("<p>An order has been cancelled and may require inventory updates.</p>");
         
         // Customer Details Box
-        content.append("<div style=\"background-color: #f8d7da; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545; margin: 20px 0;\">");
-        content.append("<h4 style=\"margin-top: 0; color: #721c24;\">👤 Customer Details</h4>");
+        content.append("<div style=\"background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin: 20px 0;\">");
+        content.append("<h4 style=\"margin-top: 0; color: #000000; font-size: 16px; font-weight: bold;\">👤 Customer Details</h4>");
         content.append("<table style=\"width: 100%;\">");
         content.append("<tr><td style=\"padding: 4px 0;\"><strong>Name:</strong></td><td>").append(safeGet(user.getFullName(), "N/A")).append("</td></tr>");
         content.append("<tr><td style=\"padding: 4px 0;\"><strong>Email:</strong></td><td>").append(safeGet(user.getEmail(), "N/A")).append("</td></tr>");
@@ -401,8 +474,8 @@ public class EmailTemplateUtil {
         content.append("</div>");
         
         // Order Details Box
-        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;\">");
-        content.append("<h3 style=\"margin-top: 0; color: #dc3545;\">Cancelled Order Details</h3>");
+        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #dee2e6;\">");
+        content.append("<h3 style=\"margin-top: 0; color: #000000; font-size: 18px; font-weight: bold;\">Cancelled Order Details</h3>");
         content.append("<table style=\"width: 100%; border-collapse: collapse;\">");
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Order ID:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(safeGet(order.getId(), "N/A")).append("</td></tr>");
@@ -411,23 +484,34 @@ public class EmailTemplateUtil {
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Cancellation Date:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(formatDate(LocalDateTime.now())).append("</td></tr>");
         content.append("<tr><td style=\"padding: 8px 0;\"><strong>Order Total:</strong></td>");
-        content.append("<td style=\"padding: 8px 0; text-align: right; font-size: 18px; color: #dc3545;\"><strong>").append(formatCurrency(order.getTotalAmount())).append("</strong></td></tr>");
+        content.append("<td style=\"padding: 8px 0; text-align: right; font-size: 18px; color: #000000; font-weight: bold;\"><strong>").append(formatCurrency(order.getTotalAmount())).append("</strong></td></tr>");
         content.append("</table>");
         content.append("</div>");
         
         // Items Table
-        content.append("<h3 style=\"color: #6c757d;\">Items to Return to Inventory</h3>");
+        content.append("<h3 style=\"color: #000000; font-size: 18px; font-weight: bold;\">Items to Return to Inventory</h3>");
         content.append("<table style=\"width: 100%; border-collapse: collapse; margin-bottom: 20px;\">");
-        content.append("<tr style=\"background-color: #dc3545; color: white;\">");
-        content.append("<th style=\"padding: 12px; text-align: left;\">Product ID</th>");
+        content.append("<tr style=\"background-color: #000000; color: white;\">");
+        content.append("<th style=\"padding: 12px; text-align: left;\">Product Name</th>");
         content.append("<th style=\"padding: 12px; text-align: center;\">Qty</th>");
         content.append("<th style=\"padding: 12px; text-align: right;\">Price</th>");
         content.append("</tr>");
         
         if (order.getItems() != null) {
             for (Order.OrderItem item : order.getItems()) {
+                // Fetch product name
+                String productName = "Product " + item.getProductId();
+                try {
+                    Product product = productRepository.findById(item.getProductId()).orElse(null);
+                    if (product != null && product.getName() != null && !product.getName().isBlank()) {
+                        productName = product.getName();
+                    }
+                } catch (Exception e) {
+                    // Keep default product name if fetch fails
+                }
+                
                 content.append("<tr style=\"background-color: #f8f9fa;\">");
-                content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6;\">").append(safeGet(item.getProductId(), "N/A")).append("</td>");
+                content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6; font-weight: 500;\">").append(productName).append("</td>");
                 content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6; text-align: center;\">").append(item.getQuantity()).append("</td>");
                 content.append("<td style=\"padding: 12px; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(formatCurrency(item.getPrice())).append("</td>");
                 content.append("</tr>");
@@ -435,7 +519,7 @@ public class EmailTemplateUtil {
         }
         content.append("</table>");
         
-        content.append("<p style=\"background-color: #fff3cd; padding: 15px; border-radius: 8px; color: #856404;\"><strong>⚠️ Action Required:</strong> Please update inventory and process any refunds if applicable.</p>");
+        content.append("<p style=\"background-color: #f8f9fa; padding: 15px; border-radius: 8px; color: #333333; border: 1px solid #dee2e6;\"><strong>⚠️ Action Required:</strong> Please update inventory and process any refunds if applicable.</p>");
         content.append("<p style=\"margin-top: 20px; font-size: 12px; color: #6c757d;\">---<br>Automated notification from ").append(BRAND_NAME).append(" System</p>");
         
         return buildBaseTemplate("Order Cancelled - " + BRAND_NAME, content.toString());
@@ -450,13 +534,13 @@ public class EmailTemplateUtil {
     public String buildInvoiceEmail(Invoice invoice, User user) {
         StringBuilder content = new StringBuilder();
         
-        content.append("<h2 style=\"color: ").append(BRAND_COLOR).append("; margin-top: 0;\">📄 Your Invoice is Ready!</h2>");
+        content.append("<h2 style=\"color: #000000; margin-top: 0; font-size: 24px; font-weight: bold;\">📄 Your Invoice is Ready!</h2>");
         content.append("<p>Dear ").append(safeGet(user.getFullName(), "Customer")).append(",</p>");
         content.append("<p>Thank you for your order! Please find your invoice attached to this email.</p>");
         
         // Invoice Details Box
-        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;\">");
-        content.append("<h3 style=\"margin-top: 0; color: ").append(BRAND_COLOR).append(";\">Invoice Details</h3>");
+        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #dee2e6;\">");
+        content.append("<h3 style=\"margin-top: 0; color: #000000; font-size: 18px; font-weight: bold;\">Invoice Details</h3>");
         content.append("<table style=\"width: 100%; border-collapse: collapse;\">");
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Invoice Number:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(safeGet(invoice.getInvoiceNumber(), "N/A")).append("</td></tr>");
@@ -469,7 +553,7 @@ public class EmailTemplateUtil {
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Tax:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(formatCurrency(invoice.getTaxAmount())).append("</td></tr>");
         content.append("<tr><td style=\"padding: 8px 0;\"><strong>Total Amount:</strong></td>");
-        content.append("<td style=\"padding: 8px 0; text-align: right; font-size: 18px; color: ").append(BRAND_COLOR).append(";\"><strong>").append(formatCurrency(invoice.getTotalAmount())).append("</strong></td></tr>");
+        content.append("<td style=\"padding: 8px 0; text-align: right; font-size: 18px; color: #000000; font-weight: bold;\"><strong>").append(formatCurrency(invoice.getTotalAmount())).append("</strong></td></tr>");
         content.append("</table>");
         content.append("</div>");
         
@@ -489,12 +573,12 @@ public class EmailTemplateUtil {
     public String buildAdminInvoiceEmail(Invoice invoice, User user) {
         StringBuilder content = new StringBuilder();
         
-        content.append("<h2 style=\"color: ").append(BRAND_COLOR).append("; margin-top: 0;\">📄 Invoice Generated</h2>");
+        content.append("<h2 style=\"color: #000000; margin-top: 0; font-size: 24px; font-weight: bold;\">📄 Invoice Generated</h2>");
         content.append("<p>A new invoice has been generated and sent to the customer.</p>");
         
         // Customer Details Box
-        content.append("<div style=\"background-color: #d4edda; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745; margin: 20px 0;\">");
-        content.append("<h4 style=\"margin-top: 0; color: #155724;\">👤 Customer Details</h4>");
+        content.append("<div style=\"background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin: 20px 0;\">");
+        content.append("<h4 style=\"margin-top: 0; color: #000000; font-size: 16px; font-weight: bold;\">👤 Customer Details</h4>");
         content.append("<table style=\"width: 100%;\">");
         content.append("<tr><td style=\"padding: 4px 0;\"><strong>Name:</strong></td><td>").append(safeGet(user.getFullName(), "N/A")).append("</td></tr>");
         content.append("<tr><td style=\"padding: 4px 0;\"><strong>Email:</strong></td><td>").append(safeGet(user.getEmail(), "N/A")).append("</td></tr>");
@@ -503,8 +587,8 @@ public class EmailTemplateUtil {
         content.append("</div>");
         
         // Invoice Details Box
-        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;\">");
-        content.append("<h3 style=\"margin-top: 0; color: ").append(BRAND_COLOR).append(";\">Invoice Details</h3>");
+        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #dee2e6;\">");
+        content.append("<h3 style=\"margin-top: 0; color: #000000; font-size: 18px; font-weight: bold;\">Invoice Details</h3>");
         content.append("<table style=\"width: 100%; border-collapse: collapse;\">");
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Invoice Number:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(safeGet(invoice.getInvoiceNumber(), "N/A")).append("</td></tr>");
@@ -515,7 +599,7 @@ public class EmailTemplateUtil {
         content.append("<tr><td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6;\"><strong>Generated At:</strong></td>");
         content.append("<td style=\"padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;\">").append(formatDate(invoice.getGeneratedAt())).append("</td></tr>");
         content.append("<tr><td style=\"padding: 8px 0;\"><strong>Total Amount:</strong></td>");
-        content.append("<td style=\"padding: 8px 0; text-align: right; font-size: 18px; color: #28a745;\"><strong>").append(formatCurrency(invoice.getTotalAmount())).append("</strong></td></tr>");
+        content.append("<td style=\"padding: 8px 0; text-align: right; font-size: 18px; color: #000000; font-weight: bold;\"><strong>").append(formatCurrency(invoice.getTotalAmount())).append("</strong></td></tr>");
         content.append("</table>");
         content.append("</div>");
         
@@ -535,22 +619,22 @@ public class EmailTemplateUtil {
     public String buildCartReminderEmail(User user, Product product) {
         StringBuilder content = new StringBuilder();
         
-        content.append("<h2 style=\"color: ").append(BRAND_COLOR).append("; margin-top: 0;\">🛒 Don't Forget Your Cart!</h2>");
+        content.append("<h2 style=\"color: #000000; margin-top: 0; font-size: 24px; font-weight: bold;\">🛒 Don't Forget Your Cart!</h2>");
         content.append("<p>Dear ").append(safeGet(user.getFullName(), "Customer")).append(",</p>");
         content.append("<p>We noticed you left something amazing in your cart. Don't miss out!</p>");
         
         // Product Box
-        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid ").append(BRAND_COLOR).append(";\">");
-        content.append("<h3 style=\"margin-top: 0; color: ").append(BRAND_COLOR).append(";\">").append(safeGet(product.getName(), "Product")).append("</h3>");
-        content.append("<p style=\"font-size: 24px; color: #28a745; margin: 10px 0;\"><strong>").append(formatCurrency(product.getPrice())).append("</strong></p>");
+        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #000000;\">");
+        content.append("<h3 style=\"margin-top: 0; color: #000000; font-size: 18px; font-weight: bold;\">").append(safeGet(product.getName(), "Product")).append("</h3>");
+        content.append("<p style=\"font-size: 24px; color: #000000; margin: 10px 0; font-weight: bold;\"><strong>").append(formatCurrency(product.getPrice())).append("</strong></p>");
         
         // Stock Status
         if (product.getStockQuantity() > 0 && product.getStockQuantity() <= 5) {
-            content.append("<p style=\"background-color: #fff3cd; padding: 10px; border-radius: 4px; color: #856404;\">⚠️ <strong>Hurry!</strong> Only ").append(product.getStockQuantity()).append(" left in stock!</p>");
+            content.append("<p style=\"background-color: #f8f9fa; padding: 10px; border-radius: 4px; color: #333333; border: 1px solid #dee2e6;\">⚠️ <strong>Hurry!</strong> Only ").append(product.getStockQuantity()).append(" left in stock!</p>");
         } else if (product.getStockQuantity() > 0) {
-            content.append("<p style=\"background-color: #d4edda; padding: 10px; border-radius: 4px; color: #155724;\">✅ In Stock - Available Now!</p>");
+            content.append("<p style=\"background-color: #f8f9fa; padding: 10px; border-radius: 4px; color: #333333; border: 1px solid #dee2e6;\">✅ In Stock - Available Now!</p>");
         } else {
-            content.append("<p style=\"background-color: #f8d7da; padding: 10px; border-radius: 4px; color: #721c24;\">❌ Currently Out of Stock</p>");
+            content.append("<p style=\"background-color: #f8f9fa; padding: 10px; border-radius: 4px; color: #333333; border: 1px solid #dee2e6;\">❌ Currently Out of Stock</p>");
         }
         content.append("</div>");
         
@@ -561,9 +645,9 @@ public class EmailTemplateUtil {
                     .findFirst()
                     .orElse(user.getAddresses().get(0));
             
-            content.append("<div style=\"background-color: #cce5ff; padding: 15px; border-radius: 8px; border-left: 4px solid #004085; margin: 20px 0;\">");
-            content.append("<h4 style=\"margin-top: 0; color: #004085;\">📦 Your Delivery Address</h4>");
-            content.append("<p style=\"margin: 0; color: #004085;\">");
+            content.append("<div style=\"background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin: 20px 0;\">");
+            content.append("<h4 style=\"margin-top: 0; color: #000000; font-size: 16px; font-weight: bold;\">📦 Your Delivery Address</h4>");
+            content.append("<p style=\"margin: 0; color: #333333; line-height: 1.6;\">");
             content.append(safeGet(deliveryAddress.getAddressLine(), "")).append("<br>");
             content.append(safeGet(deliveryAddress.getCity(), "")).append(", ").append(safeGet(deliveryAddress.getState(), "")).append("<br>");
             content.append(safeGet(deliveryAddress.getPostalCode(), "")).append(", ").append(safeGet(deliveryAddress.getCountry(), "India"));
@@ -572,7 +656,7 @@ public class EmailTemplateUtil {
         }
         
         content.append("<p style=\"text-align: center; margin: 30px 0;\">");
-        content.append("<span style=\"background-color: ").append(BRAND_COLOR).append("; color: white; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: bold;\">Complete Your Purchase Now!</span>");
+        content.append("<span style=\"background-color: #000000; color: white; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: bold;\">Complete Your Purchase Now!</span>");
         content.append("</p>");
         
         content.append("<p>Your cart is waiting for you. Visit our store and checkout today!</p>");
@@ -592,22 +676,22 @@ public class EmailTemplateUtil {
     public String buildWishlistReminderEmail(User user, Product product) {
         StringBuilder content = new StringBuilder();
         
-        content.append("<h2 style=\"color: ").append(BRAND_COLOR).append("; margin-top: 0;\">💝 Your Wishlist Item is Calling!</h2>");
+        content.append("<h2 style=\"color: #000000; margin-top: 0; font-size: 24px; font-weight: bold;\">💝 Your Wishlist Item is Calling!</h2>");
         content.append("<p>Dear ").append(safeGet(user.getFullName(), "Customer")).append(",</p>");
         content.append("<p>Remember this product you loved? It's still waiting for you!</p>");
         
         // Product Box
-        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #e83e8c;\">");
-        content.append("<h3 style=\"margin-top: 0; color: #e83e8c;\">").append(safeGet(product.getName(), "Product")).append("</h3>");
-        content.append("<p style=\"font-size: 24px; color: #28a745; margin: 10px 0;\"><strong>").append(formatCurrency(product.getPrice())).append("</strong></p>");
+        content.append("<div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #000000;\">");
+        content.append("<h3 style=\"margin-top: 0; color: #000000; font-size: 18px; font-weight: bold;\">").append(safeGet(product.getName(), "Product")).append("</h3>");
+        content.append("<p style=\"font-size: 24px; color: #000000; margin: 10px 0; font-weight: bold;\"><strong>").append(formatCurrency(product.getPrice())).append("</strong></p>");
         
         // Stock Status
         if (product.getStockQuantity() > 0 && product.getStockQuantity() <= 5) {
-            content.append("<p style=\"background-color: #fff3cd; padding: 10px; border-radius: 4px; color: #856404;\">⚠️ <strong>Hurry!</strong> Only ").append(product.getStockQuantity()).append(" left in stock!</p>");
+            content.append("<p style=\"background-color: #f8f9fa; padding: 10px; border-radius: 4px; color: #333333; border: 1px solid #dee2e6;\">⚠️ <strong>Hurry!</strong> Only ").append(product.getStockQuantity()).append(" left in stock!</p>");
         } else if (product.getStockQuantity() > 0) {
-            content.append("<p style=\"background-color: #d4edda; padding: 10px; border-radius: 4px; color: #155724;\">✅ In Stock - Available Now!</p>");
+            content.append("<p style=\"background-color: #f8f9fa; padding: 10px; border-radius: 4px; color: #333333; border: 1px solid #dee2e6;\">✅ In Stock - Available Now!</p>");
         } else {
-            content.append("<p style=\"background-color: #f8d7da; padding: 10px; border-radius: 4px; color: #721c24;\">❌ Currently Out of Stock - We'll notify you when it's back!</p>");
+            content.append("<p style=\"background-color: #f8f9fa; padding: 10px; border-radius: 4px; color: #333333; border: 1px solid #dee2e6;\">❌ Currently Out of Stock - We'll notify you when it's back!</p>");
         }
         content.append("</div>");
         
@@ -618,9 +702,9 @@ public class EmailTemplateUtil {
                     .findFirst()
                     .orElse(user.getAddresses().get(0));
             
-            content.append("<div style=\"background-color: #cce5ff; padding: 15px; border-radius: 8px; border-left: 4px solid #004085; margin: 20px 0;\">");
-            content.append("<h4 style=\"margin-top: 0; color: #004085;\">📦 Your Delivery Address</h4>");
-            content.append("<p style=\"margin: 0; color: #004085;\">");
+            content.append("<div style=\"background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin: 20px 0;\">");
+            content.append("<h4 style=\"margin-top: 0; color: #000000; font-size: 16px; font-weight: bold;\">📦 Your Delivery Address</h4>");
+            content.append("<p style=\"margin: 0; color: #333333; line-height: 1.6;\">");
             content.append(safeGet(deliveryAddress.getAddressLine(), "")).append("<br>");
             content.append(safeGet(deliveryAddress.getCity(), "")).append(", ").append(safeGet(deliveryAddress.getState(), "")).append("<br>");
             content.append(safeGet(deliveryAddress.getPostalCode(), "")).append(", ").append(safeGet(deliveryAddress.getCountry(), "India"));
@@ -630,7 +714,7 @@ public class EmailTemplateUtil {
         
         if (product.getStockQuantity() > 0) {
             content.append("<p style=\"text-align: center; margin: 30px 0;\">");
-            content.append("<span style=\"background-color: #e83e8c; color: white; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: bold;\">Turn Your Wish Into Reality!</span>");
+            content.append("<span style=\"background-color: #000000; color: white; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: bold;\">Turn Your Wish Into Reality!</span>");
             content.append("</p>");
             content.append("<p>Why wait? Move it to your cart and make it yours today!</p>");
         } else {
@@ -672,12 +756,11 @@ public class EmailTemplateUtil {
         
         // Product Name (bold and prominent)
         if (product != null) {
-            card.append("<h4 style=\"margin: 10px 0; color: ").append(BRAND_COLOR)
-                .append(";\">").append(safeGet(product.getName(), "Product")).append("</h4>");
+            card.append("<h4 style=\"margin: 10px 0; color: #000000; font-size: 16px; font-weight: bold;\">").append(safeGet(product.getName(), "Product")).append("</h4>");
         } else {
-            card.append("<h4 style=\"margin: 10px 0; color: #dc3545;\">Product ID: ")
+            card.append("<h4 style=\"margin: 10px 0; color: #dc3545; font-size: 16px; font-weight: bold;\">Product ID: ")
                 .append(item.getProductId()).append("</h4>");
-            card.append("<p style=\"color: #856404; font-style: italic;\">⚠️ Note: Product details not found in database. Please check manually.</p>");
+            card.append("<p style=\"color: #666666; font-style: italic;\">⚠️ Note: Product details not found in database. Please check manually.</p>");
         }
         
         // Product Details Table
@@ -707,7 +790,7 @@ public class EmailTemplateUtil {
             String stockStatus = product.getStockQuantity() > 0 
                 ? product.getStockQuantity() + " units" 
                 : "Out of Stock";
-            String stockColor = product.getStockQuantity() > 0 ? "#28a745" : "#dc3545";
+            String stockColor = product.getStockQuantity() > 0 ? "#000000" : "#dc3545";
             card.append("<tr><td style=\"padding: 4px 0;\"><strong>Stock:</strong></td><td style=\"color: ")
                 .append(stockColor).append("; font-weight: bold;\">").append(stockStatus).append("</td></tr>");
         }
@@ -717,15 +800,15 @@ public class EmailTemplateUtil {
             .append(item.getQuantity()).append("</td></tr>");
         card.append("<tr><td style=\"padding: 4px 0;\"><strong>Unit Price:</strong></td><td>")
             .append(formatCurrency(item.getPrice())).append("</td></tr>");
-        card.append("<tr><td style=\"padding: 4px 0;\"><strong>Line Total:</strong></td><td style=\"font-size: 16px; color: #28a745; font-weight: bold;\">")
+        card.append("<tr><td style=\"padding: 4px 0;\"><strong>Line Total:</strong></td><td style=\"font-size: 16px; color: #000000; font-weight: bold;\">")
             .append(formatCurrency(itemTotal)).append("</td></tr>");
         card.append("</table>");
         
         // Product Description (if available)
         if (product != null && product.getDescription() != null && !product.getDescription().isBlank()) {
-            card.append("<div style=\"margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 4px;\">")
-                .append("<strong style=\"color: ").append(BRAND_COLOR).append(";\">Description:</strong><br>")
-                .append("<span style=\"font-size: 14px; color: #6c757d;\">").append(product.getDescription()).append("</span>")
+            card.append("<div style=\"margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;\">")
+                .append("<strong style=\"color: #000000;\">Description:</strong><br>")
+                .append("<span style=\"font-size: 14px; color: #666666;\">").append(product.getDescription()).append("</span>")
                 .append("</div>");
         }
         
