@@ -48,6 +48,8 @@ public class User {
 
         private String addressLine;
 
+        private String landmark;  // NEW: Landmark field
+
         private String city;
 
         private String state;

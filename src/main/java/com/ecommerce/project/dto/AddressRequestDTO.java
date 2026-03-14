@@ -14,6 +14,8 @@ public class AddressRequestDTO {
     @NotBlank(message = "Address line is required")
     private String addressLine;
 
+    private String landmark;  // NEW: Landmark field (optional)
+
     @NotBlank(message = "City is required")
     private String city;
 

@@ -11,6 +11,7 @@ public class AddressResponseDTO {
 
     private String addressId;
     private String addressLine;
+    private String landmark;  // NEW: Landmark field
     private String city;
     private String state;
     private String postalCode;

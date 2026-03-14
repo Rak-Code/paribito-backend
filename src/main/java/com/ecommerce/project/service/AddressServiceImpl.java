@@ -31,6 +31,7 @@ public class AddressServiceImpl implements AddressService {
         User.Address address = new User.Address();
         address.setAddressId(UUID.randomUUID().toString());
         address.setAddressLine(addressRequestDTO.getAddressLine());
+        address.setLandmark(addressRequestDTO.getLandmark());  // NEW: Set landmark
         address.setCity(addressRequestDTO.getCity());
         address.setState(addressRequestDTO.getState());
         address.setPostalCode(addressRequestDTO.getPostalCode());
@@ -82,6 +83,7 @@ public class AddressServiceImpl implements AddressService {
         }
 
         address.setAddressLine(addressRequestDTO.getAddressLine());
+        address.setLandmark(addressRequestDTO.getLandmark());  // NEW: Set landmark
         address.setCity(addressRequestDTO.getCity());
         address.setState(addressRequestDTO.getState());
         address.setPostalCode(addressRequestDTO.getPostalCode());
@@ -131,6 +133,7 @@ public class AddressServiceImpl implements AddressService {
         return new AddressResponseDTO(
                 address.getAddressId(),
                 address.getAddressLine(),
+                address.getLandmark(),      // NEW: Include landmark
                 address.getCity(),
                 address.getState(),
                 address.getPostalCode(),

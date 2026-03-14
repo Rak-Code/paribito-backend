@@ -222,29 +222,43 @@ public class EmailTemplateUtil {
             
             // Build address with proper formatting
             StringBuilder addressText = new StringBuilder();
+            
+            // Address Line (always show if exists)
             if (address.getAddressLine() != null && !address.getAddressLine().isBlank()) {
                 addressText.append(address.getAddressLine()).append("<br>");
             }
             
-            // City and State
-            if (address.getCity() != null && !address.getCity().isBlank()) {
-                if (address.getState() != null && !address.getState().isBlank()) {
-                    addressText.append(address.getCity()).append(", ").append(address.getState()).append("<br>");
-                } else {
-                    addressText.append(address.getCity()).append("<br>");
-                }
-            } else if (address.getState() != null && !address.getState().isBlank()) {
-                addressText.append(address.getState()).append("<br>");
+            // Landmark (if exists)
+            if (address.getLandmark() != null && !address.getLandmark().isBlank()) {
+                addressText.append("<em>Near: ").append(address.getLandmark()).append("</em><br>");
             }
             
-            // Postal Code
-            if (address.getPostalCode() != null && !address.getPostalCode().isBlank()) {
-                addressText.append(address.getPostalCode());
-                if (address.getCountry() != null && !address.getCountry().isBlank()) {
-                    addressText.append(", ").append(address.getCountry());
+            // City and State on same line with comma
+            boolean hasCity = address.getCity() != null && !address.getCity().isBlank();
+            boolean hasState = address.getState() != null && !address.getState().isBlank();
+            
+            if (hasCity || hasState) {
+                if (hasCity && hasState) {
+                    addressText.append(address.getCity()).append(", ").append(address.getState()).append("<br>");
+                } else if (hasCity) {
+                    addressText.append(address.getCity()).append("<br>");
+                } else if (hasState) {
+                    addressText.append(address.getState()).append("<br>");
                 }
-            } else if (address.getCountry() != null && !address.getCountry().isBlank()) {
-                addressText.append(address.getCountry());
+            }
+            
+            // Postal Code and Country on same line with comma
+            boolean hasPostalCode = address.getPostalCode() != null && !address.getPostalCode().isBlank();
+            boolean hasCountry = address.getCountry() != null && !address.getCountry().isBlank();
+            
+            if (hasPostalCode || hasCountry) {
+                if (hasPostalCode && hasCountry) {
+                    addressText.append(address.getPostalCode()).append(", ").append(address.getCountry());
+                } else if (hasPostalCode) {
+                    addressText.append(address.getPostalCode());
+                } else if (hasCountry) {
+                    addressText.append(address.getCountry());
+                }
             }
             
             content.append(addressText.toString());
@@ -345,29 +359,43 @@ public class EmailTemplateUtil {
             
             // Build address with proper formatting
             StringBuilder addressText = new StringBuilder();
+            
+            // Address Line (always show if exists)
             if (address.getAddressLine() != null && !address.getAddressLine().isBlank()) {
                 addressText.append(address.getAddressLine()).append("<br>");
             }
             
-            // City and State
-            if (address.getCity() != null && !address.getCity().isBlank()) {
-                if (address.getState() != null && !address.getState().isBlank()) {
-                    addressText.append(address.getCity()).append(", ").append(address.getState()).append("<br>");
-                } else {
-                    addressText.append(address.getCity()).append("<br>");
-                }
-            } else if (address.getState() != null && !address.getState().isBlank()) {
-                addressText.append(address.getState()).append("<br>");
+            // Landmark (if exists)
+            if (address.getLandmark() != null && !address.getLandmark().isBlank()) {
+                addressText.append("<em>Near: ").append(address.getLandmark()).append("</em><br>");
             }
             
-            // Postal Code
-            if (address.getPostalCode() != null && !address.getPostalCode().isBlank()) {
-                addressText.append(address.getPostalCode());
-                if (address.getCountry() != null && !address.getCountry().isBlank()) {
-                    addressText.append(", ").append(address.getCountry());
+            // City and State on same line with comma
+            boolean hasCity = address.getCity() != null && !address.getCity().isBlank();
+            boolean hasState = address.getState() != null && !address.getState().isBlank();
+            
+            if (hasCity || hasState) {
+                if (hasCity && hasState) {
+                    addressText.append(address.getCity()).append(", ").append(address.getState()).append("<br>");
+                } else if (hasCity) {
+                    addressText.append(address.getCity()).append("<br>");
+                } else if (hasState) {
+                    addressText.append(address.getState()).append("<br>");
                 }
-            } else if (address.getCountry() != null && !address.getCountry().isBlank()) {
-                addressText.append(address.getCountry());
+            }
+            
+            // Postal Code and Country on same line with comma
+            boolean hasPostalCode = address.getPostalCode() != null && !address.getPostalCode().isBlank();
+            boolean hasCountry = address.getCountry() != null && !address.getCountry().isBlank();
+            
+            if (hasPostalCode || hasCountry) {
+                if (hasPostalCode && hasCountry) {
+                    addressText.append(address.getPostalCode()).append(", ").append(address.getCountry());
+                } else if (hasPostalCode) {
+                    addressText.append(address.getPostalCode());
+                } else if (hasCountry) {
+                    addressText.append(address.getCountry());
+                }
             }
             
             content.append(addressText.toString());
