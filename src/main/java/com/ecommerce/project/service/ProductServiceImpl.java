@@ -2,7 +2,9 @@ package com.ecommerce.project.service;
 
 import com.ecommerce.project.dto.ProductRequestDTO;
 import com.ecommerce.project.dto.ProductResponseDTO;
+import com.ecommerce.project.dto.ProductVariantDTO;
 import com.ecommerce.project.entity.Product;
+import com.ecommerce.project.entity.ProductVariant;
 import com.ecommerce.project.exception.ResourceNotFoundException;
 import com.ecommerce.project.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +20,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +55,8 @@ public class ProductServiceImpl implements ProductService {
         product.setStockQuantity(dto.stockQuantity());
         product.setImageUrls(dto.imageUrls());
         product.setColor(dto.color());
+        product.setProductType(dto.productType() != null ? dto.productType() : Product.ProductType.REGULAR);
+        product.setAvailableDesigns(dto.availableDesigns());
 
         Product saved = productRepository.save(product);
         log.info("Created product with ID: {}", saved.getId());
@@ -95,6 +101,8 @@ public class ProductServiceImpl implements ProductService {
         product.setStockQuantity(dto.stockQuantity());
         product.setImageUrls(imageUrls);
         product.setColor(dto.color());
+        product.setProductType(dto.productType() != null ? dto.productType() : Product.ProductType.REGULAR);
+        product.setAvailableDesigns(dto.availableDesigns());
 
         Product saved = productRepository.save(product);
         log.info("Created product with ID: {} and {} images", saved.getId(), imageUrls.size());
@@ -127,6 +135,8 @@ public class ProductServiceImpl implements ProductService {
         product.setStockQuantity(dto.stockQuantity());
         product.setImageUrls(dto.imageUrls());
         product.setColor(dto.color());
+        product.setProductType(dto.productType() != null ? dto.productType() : product.getProductType());
+        product.setAvailableDesigns(dto.availableDesigns());
 
         Product updated = productRepository.save(product);
         log.info("Updated product {}", id);
@@ -186,6 +196,8 @@ public class ProductServiceImpl implements ProductService {
         product.setStockQuantity(dto.stockQuantity());
         product.setImageUrls(imageUrls);
         product.setColor(dto.color());
+        product.setProductType(dto.productType() != null ? dto.productType() : product.getProductType());
+        product.setAvailableDesigns(dto.availableDesigns());
 
         Product updated = productRepository.save(product);
         log.info("Updated product {} with {} total images", id, imageUrls.size());
@@ -282,6 +294,19 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductResponseDTO toDTO(Product p) {
+        List<ProductVariantDTO> variantDTOs = null;
+        if (p.getColorVariants() != null) {
+            variantDTOs = p.getColorVariants().stream()
+                    .map(v -> new ProductVariantDTO(
+                            v.getVariantId(),
+                            v.getColorName(),
+                            v.getColorCode(),
+                            v.getImageUrls(),
+                            v.getStockQuantity()
+                    ))
+                    .toList();
+        }
+        
         return new ProductResponseDTO(
                 p.getId(),
                 p.getName(),
@@ -292,7 +317,280 @@ public class ProductServiceImpl implements ProductService {
                 p.getStockQuantity(),
                 p.getCategoryId(),
                 p.getColor(),
-                p.getImageUrls()
+                p.getImageUrls(),
+                variantDTOs,
+                p.getProductType(),
+                p.getAvailableDesigns()
         );
+    }
+
+    // ========== COLOR VARIANT MANAGEMENT ==========
+    
+    @Override
+    public ProductResponseDTO addColorVariant(String productId, String colorName, String colorCode, int stockQuantity, MultipartFile[] images) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
+        
+        // Initialize colorVariants list if null
+        if (product.getColorVariants() == null) {
+            product.setColorVariants(new ArrayList<>());
+        }
+        
+        // Create new variant
+        ProductVariant variant = new ProductVariant();
+        variant.setVariantId(java.util.UUID.randomUUID().toString());
+        variant.setColorName(colorName);
+        variant.setColorCode(colorCode);
+        variant.setStockQuantity(stockQuantity);
+        
+        // Upload images for this variant
+        List<String> imageUrls = new ArrayList<>();
+        if (images != null && images.length > 0) {
+            try {
+                List<MultipartFile> imageList = Arrays.asList(images);
+                imageUrls = imageStorageService.uploadImages(imageList, "products/variants");
+                log.info("Uploaded {} images for variant {}", imageUrls.size(), variant.getVariantId());
+            } catch (Exception e) {
+                log.error("Failed to upload variant images: {}", e.getMessage());
+                throw new RuntimeException("Failed to upload variant images: " + e.getMessage());
+            }
+        }
+        variant.setImageUrls(imageUrls);
+        
+        product.getColorVariants().add(variant);
+        Product updated = productRepository.save(product);
+        log.info("Added color variant {} to product {}", variant.getVariantId(), productId);
+        
+        return toDTO(updated);
+    }
+    
+    @Override
+    public ProductResponseDTO updateColorVariant(String productId, String variantId, String colorName, 
+                                                  String colorCode, Integer stockQuantity, 
+                                                  MultipartFile[] images, boolean keepExistingImages) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
+        
+        if (product.getColorVariants() == null) {
+            throw new ResourceNotFoundException("ColorVariant", "variantId", variantId);
+        }
+        
+        ProductVariant variant = product.getColorVariants().stream()
+                .filter(v -> v.getVariantId().equals(variantId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("ColorVariant", "variantId", variantId));
+        
+        // Update variant properties
+        if (colorName != null) variant.setColorName(colorName);
+        if (colorCode != null) variant.setColorCode(colorCode);
+        if (stockQuantity != null) variant.setStockQuantity(stockQuantity);
+        
+        // Handle images
+        List<String> imageUrls = new ArrayList<>();
+        if (keepExistingImages && variant.getImageUrls() != null) {
+            imageUrls.addAll(variant.getImageUrls());
+        } else if (!keepExistingImages && variant.getImageUrls() != null) {
+            // Delete old images
+            try {
+                imageStorageService.deleteImages(variant.getImageUrls());
+                log.info("Deleted {} old images for variant {}", variant.getImageUrls().size(), variantId);
+            } catch (Exception e) {
+                log.warn("Failed to delete old variant images: {}", e.getMessage());
+            }
+        }
+        
+        // Upload new images
+        if (images != null && images.length > 0) {
+            try {
+                List<MultipartFile> imageList = Arrays.asList(images);
+                List<String> newImageUrls = imageStorageService.uploadImages(imageList, "products/variants");
+                imageUrls.addAll(newImageUrls);
+                log.info("Uploaded {} new images for variant {}", newImageUrls.size(), variantId);
+            } catch (Exception e) {
+                log.error("Failed to upload new variant images: {}", e.getMessage());
+                throw new RuntimeException("Failed to upload variant images: " + e.getMessage());
+            }
+        }
+        
+        variant.setImageUrls(imageUrls);
+        Product updated = productRepository.save(product);
+        log.info("Updated color variant {} for product {}", variantId, productId);
+        
+        return toDTO(updated);
+    }
+    
+    @Override
+    public ProductResponseDTO deleteColorVariant(String productId, String variantId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
+        
+        if (product.getColorVariants() == null) {
+            throw new ResourceNotFoundException("ColorVariant", "variantId", variantId);
+        }
+        
+        ProductVariant variant = product.getColorVariants().stream()
+                .filter(v -> v.getVariantId().equals(variantId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("ColorVariant", "variantId", variantId));
+        
+        // Delete variant images from storage
+        if (variant.getImageUrls() != null && !variant.getImageUrls().isEmpty()) {
+            try {
+                imageStorageService.deleteImages(variant.getImageUrls());
+                log.info("Deleted {} images for variant {}", variant.getImageUrls().size(), variantId);
+            } catch (Exception e) {
+                log.warn("Failed to delete variant images: {}", e.getMessage());
+            }
+        }
+        
+        product.getColorVariants().remove(variant);
+        Product updated = productRepository.save(product);
+        log.info("Deleted color variant {} from product {}", variantId, productId);
+        
+        return toDTO(updated);
+    }
+    
+    @Override
+    public List<Map<String, Object>> getColorVariants(String productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
+        
+        if (product.getColorVariants() == null) {
+            return new ArrayList<>();
+        }
+        
+        return product.getColorVariants().stream()
+                .map(variant -> {
+                    Map<String, Object> variantMap = new HashMap<>();
+                    variantMap.put("variantId", variant.getVariantId());
+                    variantMap.put("colorName", variant.getColorName());
+                    variantMap.put("colorCode", variant.getColorCode());
+                    variantMap.put("imageUrls", variant.getImageUrls());
+                    variantMap.put("stockQuantity", variant.getStockQuantity());
+                    return variantMap;
+                })
+                .toList();
+    }
+    
+    // ========== INDIVIDUAL IMAGE MANAGEMENT ==========
+    
+    @Override
+    public ProductResponseDTO deleteProductImage(String productId, String imageUrl) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
+        
+        if (product.getImageUrls() == null || !product.getImageUrls().contains(imageUrl)) {
+            throw new IllegalArgumentException("Image URL not found in product");
+        }
+        
+        // Delete from storage
+        try {
+            imageStorageService.deleteImage(imageUrl);
+            log.info("Deleted image {} from storage", imageUrl);
+        } catch (Exception e) {
+            log.warn("Failed to delete image from storage: {}", e.getMessage());
+        }
+        
+        // Remove from product
+        product.getImageUrls().remove(imageUrl);
+        Product updated = productRepository.save(product);
+        log.info("Removed image from product {}", productId);
+        
+        return toDTO(updated);
+    }
+    
+    @Override
+    public ProductResponseDTO deleteVariantImage(String productId, String variantId, String imageUrl) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
+        
+        if (product.getColorVariants() == null) {
+            throw new ResourceNotFoundException("ColorVariant", "variantId", variantId);
+        }
+        
+        ProductVariant variant = product.getColorVariants().stream()
+                .filter(v -> v.getVariantId().equals(variantId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("ColorVariant", "variantId", variantId));
+        
+        if (variant.getImageUrls() == null || !variant.getImageUrls().contains(imageUrl)) {
+            throw new IllegalArgumentException("Image URL not found in variant");
+        }
+        
+        // Delete from storage
+        try {
+            imageStorageService.deleteImage(imageUrl);
+            log.info("Deleted image {} from storage", imageUrl);
+        } catch (Exception e) {
+            log.warn("Failed to delete image from storage: {}", e.getMessage());
+        }
+        
+        // Remove from variant
+        variant.getImageUrls().remove(imageUrl);
+        Product updated = productRepository.save(product);
+        log.info("Removed image from variant {} of product {}", variantId, productId);
+        
+        return toDTO(updated);
+    }
+    
+    @Override
+    public ProductResponseDTO addProductImages(String productId, MultipartFile[] images) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
+        
+        if (product.getImageUrls() == null) {
+            product.setImageUrls(new ArrayList<>());
+        }
+        
+        // Upload new images
+        if (images != null && images.length > 0) {
+            try {
+                List<MultipartFile> imageList = Arrays.asList(images);
+                List<String> newImageUrls = imageStorageService.uploadImages(imageList, "products");
+                product.getImageUrls().addAll(newImageUrls);
+                log.info("Added {} images to product {}", newImageUrls.size(), productId);
+            } catch (Exception e) {
+                log.error("Failed to upload images: {}", e.getMessage());
+                throw new RuntimeException("Failed to upload images: " + e.getMessage());
+            }
+        }
+        
+        Product updated = productRepository.save(product);
+        return toDTO(updated);
+    }
+    
+    @Override
+    public ProductResponseDTO addVariantImages(String productId, String variantId, MultipartFile[] images) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
+        
+        if (product.getColorVariants() == null) {
+            throw new ResourceNotFoundException("ColorVariant", "variantId", variantId);
+        }
+        
+        ProductVariant variant = product.getColorVariants().stream()
+                .filter(v -> v.getVariantId().equals(variantId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("ColorVariant", "variantId", variantId));
+        
+        if (variant.getImageUrls() == null) {
+            variant.setImageUrls(new ArrayList<>());
+        }
+        
+        // Upload new images
+        if (images != null && images.length > 0) {
+            try {
+                List<MultipartFile> imageList = Arrays.asList(images);
+                List<String> newImageUrls = imageStorageService.uploadImages(imageList, "products/variants");
+                variant.getImageUrls().addAll(newImageUrls);
+                log.info("Added {} images to variant {} of product {}", newImageUrls.size(), variantId, productId);
+            } catch (Exception e) {
+                log.error("Failed to upload variant images: {}", e.getMessage());
+                throw new RuntimeException("Failed to upload variant images: " + e.getMessage());
+            }
+        }
+        
+        Product updated = productRepository.save(product);
+        return toDTO(updated);
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ProductService {
 
@@ -29,4 +30,22 @@ public interface ProductService {
     List<ProductResponseDTO> getAllProducts();
 
     Page<ProductResponseDTO> getAllProducts(Pageable pageable);
+
+    // Color variant management
+    ProductResponseDTO addColorVariant(String productId, String colorName, String colorCode, int stockQuantity, MultipartFile[] images);
+    
+    ProductResponseDTO updateColorVariant(String productId, String variantId, String colorName, String colorCode, Integer stockQuantity, MultipartFile[] images, boolean keepExistingImages);
+    
+    ProductResponseDTO deleteColorVariant(String productId, String variantId);
+    
+    List<Map<String, Object>> getColorVariants(String productId);
+    
+    // Individual image management
+    ProductResponseDTO deleteProductImage(String productId, String imageUrl);
+    
+    ProductResponseDTO deleteVariantImage(String productId, String variantId, String imageUrl);
+    
+    ProductResponseDTO addProductImages(String productId, MultipartFile[] images);
+    
+    ProductResponseDTO addVariantImages(String productId, String variantId, MultipartFile[] images);
 }

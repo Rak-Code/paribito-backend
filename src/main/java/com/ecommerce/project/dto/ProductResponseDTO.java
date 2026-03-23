@@ -14,7 +14,10 @@ public record ProductResponseDTO(
         int stockQuantity,
         String categoryId,
         String color,
-        List<String> imageUrls
+        List<String> imageUrls,
+        List<ProductVariantDTO> colorVariants,
+        Product.ProductType productType,
+        List<String> availableDesigns
 ) {
     
     // Helper method to get formatted pricing display

@@ -44,6 +44,8 @@ public class ProductController {
             @RequestParam(value = "availableSizes") String availableSizesJson,
             @RequestParam(value = "sizeTierPricing", required = false) String sizeTierPricingJson,
             @RequestParam(value = "color", required = false) String color,
+            @RequestParam(value = "productType", required = false) String productType,
+            @RequestParam(value = "availableDesigns", required = false) String availableDesignsJson,
             @RequestParam(value = "images", required = false) MultipartFile[] images) {
         
         try {
@@ -61,7 +63,7 @@ public class ProductController {
             
             ProductRequestDTO dto = new ProductRequestDTO(
                 name, description, categoryId, price, sizeTierPricing, 
-                availableSizes, stockQuantity, null, color
+                availableSizes, stockQuantity, null, color, null, null
             );
             
             ProductResponseDTO response = productService.createProductWithImages(dto, images);
@@ -88,6 +90,8 @@ public class ProductController {
             @RequestParam(value = "availableSizes") String availableSizesJson,
             @RequestParam(value = "sizeTierPricing", required = false) String sizeTierPricingJson,
             @RequestParam(value = "color", required = false) String color,
+            @RequestParam(value = "productType", required = false) String productType,
+            @RequestParam(value = "availableDesigns", required = false) String availableDesignsJson,
             @RequestParam(value = "images", required = false) MultipartFile[] images,
             @RequestParam(value = "keepExistingImages", required = false, defaultValue = "true") boolean keepExistingImages) {
         
@@ -106,7 +110,7 @@ public class ProductController {
             
             ProductRequestDTO dto = new ProductRequestDTO(
                 name, description, categoryId, price, sizeTierPricing, 
-                availableSizes, stockQuantity, null, color
+                availableSizes, stockQuantity, null, color, null, null
             );
             
             ProductResponseDTO response = productService.updateProductWithImages(id, dto, images, keepExistingImages);
@@ -280,6 +284,127 @@ public class ProductController {
         }
         if (stockQuantity < 0) {
             throw new IllegalArgumentException("Stock quantity cannot be negative");
+        }
+    }
+
+    // ========== COLOR VARIANT MANAGEMENT ==========
+    
+    @PostMapping("/{productId}/variants")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductResponseDTO> addColorVariant(
+            @PathVariable String productId,
+            @RequestParam("colorName") String colorName,
+            @RequestParam("colorCode") String colorCode,
+            @RequestParam(value = "stockQuantity", defaultValue = "0") int stockQuantity,
+            @RequestParam(value = "images", required = false) MultipartFile[] images) {
+        
+        try {
+            ProductResponseDTO response = productService.addColorVariant(productId, colorName, colorCode, stockQuantity, images);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error adding color variant: {}", e.getMessage());
+            throw new RuntimeException("Failed to add color variant: " + e.getMessage());
+        }
+    }
+    
+    @PutMapping("/{productId}/variants/{variantId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductResponseDTO> updateColorVariant(
+            @PathVariable String productId,
+            @PathVariable String variantId,
+            @RequestParam(value = "colorName", required = false) String colorName,
+            @RequestParam(value = "colorCode", required = false) String colorCode,
+            @RequestParam(value = "stockQuantity", required = false) Integer stockQuantity,
+            @RequestParam(value = "images", required = false) MultipartFile[] images,
+            @RequestParam(value = "keepExistingImages", defaultValue = "true") boolean keepExistingImages) {
+        
+        try {
+            ProductResponseDTO response = productService.updateColorVariant(
+                productId, variantId, colorName, colorCode, stockQuantity, images, keepExistingImages);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error updating color variant: {}", e.getMessage());
+            throw new RuntimeException("Failed to update color variant: " + e.getMessage());
+        }
+    }
+    
+    @DeleteMapping("/{productId}/variants/{variantId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductResponseDTO> deleteColorVariant(
+            @PathVariable String productId,
+            @PathVariable String variantId) {
+        
+        ProductResponseDTO response = productService.deleteColorVariant(productId, variantId);
+        return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/{productId}/variants")
+    public ResponseEntity<List<Map<String, Object>>> getColorVariants(@PathVariable String productId) {
+        List<Map<String, Object>> variants = productService.getColorVariants(productId);
+        return ResponseEntity.ok(variants);
+    }
+    
+    // ========== INDIVIDUAL IMAGE MANAGEMENT ==========
+    
+    @DeleteMapping("/{productId}/images")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductResponseDTO> deleteProductImage(
+            @PathVariable String productId,
+            @RequestParam("imageUrl") String imageUrl) {
+        
+        try {
+            ProductResponseDTO response = productService.deleteProductImage(productId, imageUrl);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error deleting product image: {}", e.getMessage());
+            throw new RuntimeException("Failed to delete image: " + e.getMessage());
+        }
+    }
+    
+    @DeleteMapping("/{productId}/variants/{variantId}/images")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductResponseDTO> deleteVariantImage(
+            @PathVariable String productId,
+            @PathVariable String variantId,
+            @RequestParam("imageUrl") String imageUrl) {
+        
+        try {
+            ProductResponseDTO response = productService.deleteVariantImage(productId, variantId, imageUrl);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error deleting variant image: {}", e.getMessage());
+            throw new RuntimeException("Failed to delete variant image: " + e.getMessage());
+        }
+    }
+    
+    @PostMapping("/{productId}/images")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductResponseDTO> addProductImages(
+            @PathVariable String productId,
+            @RequestParam("images") MultipartFile[] images) {
+        
+        try {
+            ProductResponseDTO response = productService.addProductImages(productId, images);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error adding product images: {}", e.getMessage());
+            throw new RuntimeException("Failed to add images: " + e.getMessage());
+        }
+    }
+    
+    @PostMapping("/{productId}/variants/{variantId}/images")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductResponseDTO> addVariantImages(
+            @PathVariable String productId,
+            @PathVariable String variantId,
+            @RequestParam("images") MultipartFile[] images) {
+        
+        try {
+            ProductResponseDTO response = productService.addVariantImages(productId, variantId, images);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error adding variant images: {}", e.getMessage());
+            throw new RuntimeException("Failed to add variant images: " + e.getMessage());
         }
     }
 }

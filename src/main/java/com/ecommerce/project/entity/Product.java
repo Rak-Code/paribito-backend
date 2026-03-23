@@ -41,8 +41,23 @@ public class Product {
     private List<String> imageUrls;
 
     private String color;
+    
+    // Color variants - allows multiple colors per product with their own images
+    private List<ProductVariant> colorVariants;
+    
+    // Product type - regular or bespoke/made-to-measure
+    private ProductType productType = ProductType.REGULAR;
+    
+    // For bespoke products - available design options
+    private List<String> availableDesigns;
 
     private LocalDateTime createdAt = LocalDateTime.now();
+    
+    public enum ProductType {
+        REGULAR,           // Standard ready-made products
+        BESPOKE,          // Made-to-measure/custom products
+        MADE_TO_MEASURE   // Alias for bespoke
+    }
 
     public enum Size { 
         XS, S, M, L, XL, XXL, 

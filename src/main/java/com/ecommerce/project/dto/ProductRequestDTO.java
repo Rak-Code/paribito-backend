@@ -35,5 +35,11 @@ public record ProductRequestDTO(
         List<String> imageUrls,
 
         @Size(max = 50, message = "Color name must not exceed 50 characters")
-        String color
+        String color,
+        
+        // Product type - regular or bespoke
+        Product.ProductType productType,
+        
+        // For bespoke products - available design options
+        List<String> availableDesigns
 ) {}
