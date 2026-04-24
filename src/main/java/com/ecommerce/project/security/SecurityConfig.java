@@ -26,11 +26,17 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .exceptionHandling(eh -> eh.authenticationEntryPoint(authenticationEntryPoint))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                // Swagger UI and API Documentation - Public Access
+                .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger-ui-custom.html", "/swagger-resources/**", "/webjars/**").permitAll()
+                // Authentication endpoints
+                .requestMatchers("/api/auth/**").permitAll()
+                // Public API endpoints
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers("/api/categories/**").permitAll()
                 .requestMatchers("/api/products/**").permitAll()
                 .requestMatchers("/api/chat/**").permitAll()
+                // All other requests require authentication
                 .anyRequest().authenticated()
             )
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
